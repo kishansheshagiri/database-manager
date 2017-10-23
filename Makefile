@@ -6,6 +6,7 @@ OBJDIR = obj
 
 SOURCES = main.cpp \
 					query_manager.cpp \
+					sql_errors.cpp \
 					sql_parser.cpp \
 					StorageManager.cpp
 

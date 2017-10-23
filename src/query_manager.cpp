@@ -13,13 +13,13 @@ QueryManager *QueryManager::Get() {
   return manager;
 }
 
-void QueryManager::SetQuery(std::string query, bool &success) {
+void QueryManager::SetQuery(std::string query, SqlErrors::Type &error_code) {
   if (query.empty())
-    success = false;
+    error_code = SqlErrors::EMPTY_STATEMENT;
   else
     sql_query = query;
 }
 
-void QueryManager::ExecuteQuery(bool &success) {
+void QueryManager::ExecuteQuery(SqlErrors::Type &error_code) {
   parser->SetQuery(sql_query);
 }

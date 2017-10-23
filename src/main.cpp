@@ -3,6 +3,7 @@
 #include <string>
 
 #include "query_manager.h"
+#include "sql_errors.h"
 
 int main(int argc, char *argv[]) {
   // Start query Manager
@@ -14,18 +15,22 @@ int main(int argc, char *argv[]) {
     std::cout << "TinySQL> ";
     std::getline(std::cin, new_line);
 
-    // Set Query.
-    bool query_success = true;
-    query_manager->SetQuery(new_line, query_success);
-    if (!query_success) return 0;
-
-    // Start executing query
-    query_manager->ExecuteQuery(query_success);
-    if (!query_success) {
-      std::cout << "Execution failed, check syntax.";
+    // Set Query
+    SqlErrors::Type error_code = SqlErrors::NO_ERROR;
+    query_manager->SetQuery(new_line, error_code);
+    if (error_code != SqlErrors::NO_ERROR) {
+      std::cout << error_code;
       return 0;
     }
-    std::cout << std::endl << std::endl;
+
+    // Start executing query
+    query_manager->ExecuteQuery(error_code);
+    if (error_code != SqlErrors::NO_ERROR) {
+      std::cout << error_code;
+      return 0;
+    }
+
+    std::cout << error_code << std::endl << std::endl;
   }
 
   delete query_manager;

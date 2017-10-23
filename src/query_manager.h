@@ -4,6 +4,7 @@
 #include <memory>
 #include <string>
 
+#include "sql_errors.h"
 #include "sql_parser.h"
 
 class QueryManager {
@@ -12,8 +13,8 @@ class QueryManager {
   static QueryManager *Get();
 
   // Set SQL Query
-  void SetQuery(std::string query, bool &success);
-  void ExecuteQuery(bool &success);
+  void SetQuery(std::string query, SqlErrors::Type &error_code);
+  void ExecuteQuery(SqlErrors::Type &error_code);
 
  private:
   QueryManager();
