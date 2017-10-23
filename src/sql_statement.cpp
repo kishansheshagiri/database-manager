@@ -9,9 +9,9 @@ SqlStatement::~SqlStatement() {
 }
 
 std::vector<std::string> SqlStatement::Tables() {
-  return tables;
+  return tables_;
 }
 
 void SqlStatement::SetTables(std::vector<std::string> names) {
-  tables = names;
+  tables_ = names;
 }

@@ -19,11 +19,11 @@ class QueryManager {
  private:
   QueryManager();
 
-  std::unique_ptr<SqlParser> parser;
-  std::string sql_query;
+  std::unique_ptr<SqlParser> parser_;
+  std::string sql_query_;
 
   // Singleton instance
-  static QueryManager *manager;
+  static QueryManager *manager_;
 };
 
 #endif //SRC_QUERY_MANAGER_H

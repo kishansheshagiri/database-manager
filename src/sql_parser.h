@@ -9,7 +9,7 @@ class SqlParser {
   bool Parse();
 
  private:
-  std::string input_query;
+  std::string input_query_;
 };
 
 #endif //SRC_SQL_PARSER_H

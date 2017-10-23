@@ -1,25 +1,25 @@
 #include "query_manager.h"
 
-QueryManager *QueryManager::manager = nullptr;
+QueryManager *QueryManager::manager_ = nullptr;
 
 QueryManager::QueryManager() {
-  parser = std::make_unique<SqlParser>();
+  parser_ = std::make_unique<SqlParser>();
 }
 
 QueryManager *QueryManager::Get() {
-  if (!manager)
-    manager = new QueryManager();
+  if (!manager_)
+    manager_ = new QueryManager();
 
-  return manager;
+  return manager_;
 }
 
 void QueryManager::SetQuery(std::string query, SqlErrors::Type &error_code) {
   if (query.empty())
     error_code = SqlErrors::EMPTY_STATEMENT;
   else
-    sql_query = query;
+    sql_query_ = query;
 }
 
 void QueryManager::ExecuteQuery(SqlErrors::Type &error_code) {
-  parser->SetQuery(sql_query);
+  parser_->SetQuery(sql_query_);
 }

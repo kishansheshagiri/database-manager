@@ -13,7 +13,7 @@ class SqlStatement {
   void SetTables(std::vector<std::string> names);
 
  private:
-  std::vector<std::string> tables;
+  std::vector<std::string> tables_;
 };
 
 #endif // SRC_SQL_STATEMENT_H
