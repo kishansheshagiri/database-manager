@@ -22,4 +22,7 @@ void QueryManager::SetQuery(std::string query, SqlErrors::Type &error_code) {
 
 void QueryManager::ExecuteQuery(SqlErrors::Type &error_code) {
   parser_->SetQuery(sql_query_);
+  parser_->Parse(error_code);
+  if (error_code != SqlErrors::NO_ERROR)
+    return;
 }

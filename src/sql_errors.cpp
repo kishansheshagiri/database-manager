@@ -29,6 +29,18 @@ std::ostream &operator <<(std::ostream &out, const SqlErrors::Type type) {
     case SqlErrors::TUPLE_TOO_LONG:
       out << "Tuple longer than available fields";
       break;
+    case SqlErrors::TOKENIZER_NOT_INITIALIZED:
+      out << "Tokenizer not initialized";
+      break;
+    case SqlErrors::TOKENIZER_INVALID_INDEX:
+      out << "Invalid tokenizer index";
+      break;
+    case SqlErrors::TOKENIZER_INVALID_CHARACTER:
+      out << "Invalid character found by tokenizer";
+      break;
+    case SqlErrors::TOKENIZER_EMPTY_INPUT:
+      out << "Tokenizer input is empty";
+      break;
     case SqlErrors::UNKNOWN_ERROR:
     default:
       out << "Unknown error";

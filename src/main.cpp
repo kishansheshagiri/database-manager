@@ -19,16 +19,12 @@ int main(int argc, char *argv[]) {
     SqlErrors::Type error_code = SqlErrors::NO_ERROR;
     query_manager->SetQuery(new_line, error_code);
     if (error_code != SqlErrors::NO_ERROR) {
-      std::cout << error_code;
-      return 0;
+      std::cout << error_code << std::endl;
+      break;
     }
 
     // Start executing query
     query_manager->ExecuteQuery(error_code);
-    if (error_code != SqlErrors::NO_ERROR) {
-      std::cout << error_code;
-      return 0;
-    }
 
     std::cout << error_code << std::endl << std::endl;
   }
