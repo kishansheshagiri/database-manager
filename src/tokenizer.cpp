@@ -1,7 +1,8 @@
 #include "tokenizer.h"
 
 #include <regex>
-#include <sstream>
+
+#include "debug.h"
 
 Tokenizer::Tokenizer(std::string input_string)
   : input_string_(input_string),
@@ -15,13 +16,23 @@ void Tokenizer::Tokenize(SqlErrors::Type &error_code) {
     return;
   }
 
+  #ifdef DEBUG
+    std::cout << "Input: " << input_string_ << std::endl;
+  #endif
+
   cleanupOperators();
 
-  std::istringstream stream_tokenizer(input_string_);
-  std::string token;
+  std::regex re_tokenize(
+      "\\s+(?=(?:[^\\\"]*\\\"[^\\\"]*\\\"[^\\\"]*|[^\\\"])*$)");
+  std::sregex_token_iterator
+      first{input_string_.begin(), input_string_.end(), re_tokenize, -1},
+      last;
+  token_list_ = {first, last};
 
-  while(std::getline(stream_tokenizer, token, ' '))
-    token_list_.push_back(token);
+  #ifdef DEBUG
+    std::cout << "Tokens:" << std::endl;
+    for (auto printer:token_list_) std::cout << "\t" << printer << std::endl;
+  #endif
 
   tokenized_ = true;
 }
@@ -50,7 +61,9 @@ std::string Tokenizer::Word(int index, SqlErrors::Type &error_code) {
 void Tokenizer::cleanupOperators() {
   for (auto &operator_char : characters_to_cleanup_) {
     std::string char_as_string = std::string(1, operator_char);
-    std::regex replace_space(" *[\\" + char_as_string + "]+ *");
-    input_string_ = std::regex_replace(input_string_, replace_space, char_as_string);
+    std::regex replace_space(" *[\\" + char_as_string +
+        "]+ *(?=(?:[^\\\"]*\\\"[^\\\"]*\\\"[^\\\"]*|[^\\\"])*$)");
+    input_string_ = std::regex_replace(input_string_,
+        replace_space,char_as_string);
   }
 }
