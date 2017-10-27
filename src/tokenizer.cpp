@@ -1,7 +1,5 @@
 #include "tokenizer.h"
 
-#include <regex>
-
 #include "debug.h"
 
 Tokenizer::Tokenizer(std::string input_string)
@@ -58,6 +56,7 @@ std::string Tokenizer::Word(int index, SqlErrors::Type &error_code) {
   return nullptr;
 }
 
+// Private
 void Tokenizer::cleanupOperators() {
   for (auto &operator_char : characters_to_cleanup_) {
     std::string char_as_string = std::string(1, operator_char);
@@ -66,4 +65,33 @@ void Tokenizer::cleanupOperators() {
     input_string_ = std::regex_replace(input_string_,
         replace_space,char_as_string);
   }
+}
+
+// Static methods
+void Tokenizer::SplitIntoWords(
+    const std::string &long_string, const std::string &delimiter,
+    std::vector<std::string> &result) {
+  std::regex re_split(
+      "(" + delimiter + ")+");
+
+  splitIntoWords(long_string, re_split, result);
+}
+
+void Tokenizer::SplitIntoWordsMultiDelimiters(
+    const std::string &long_string, const std::string &delimiters,
+    std::vector<std::string> &result) {
+  std::regex re_split(
+      "[" + delimiters + "]+");
+
+  splitIntoWords(long_string, re_split, result);
+}
+
+void Tokenizer::splitIntoWords(
+    const std::string &long_string, const std::regex& split_regex,
+    std::vector<std::string> &result) {
+  std::sregex_token_iterator
+      first{long_string.begin(), long_string.end(), split_regex, -1},
+      last;
+
+  result = {first, last};
 }
