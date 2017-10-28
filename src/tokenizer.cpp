@@ -35,6 +35,31 @@ void Tokenizer::Tokenize(SqlErrors::Type &error_code) {
   tokenized_ = true;
 }
 
+void Tokenizer::HandleSelectAll() {
+  if (!tokenized_ || token_list_.size() <= 1)
+    return;
+
+  std::vector<std::string> select_split;
+
+  // Handle SELECT *
+  SplitIntoWords(token_list_[0], "\\*", select_split);
+  if (select_split.size() == 2) {
+    token_list_[0] = select_split[0];
+    token_list_.insert(token_list_.begin() + 1, "*");
+    token_list_.insert(token_list_.begin() + 2, select_split[1]);
+    return;
+  }
+
+  // Handle SELECT DISTINCT *
+  select_split.clear();
+  SplitIntoWords(token_list_[1], "\\*", select_split);
+  if (select_split.size() == 2) {
+    token_list_[1] = select_split[0];
+    token_list_.insert(token_list_.begin() + 2, "*");
+    token_list_.insert(token_list_.begin() + 3, select_split[1]);
+  }
+}
+
 int Tokenizer::WordCount(SqlErrors::Type &error_code) {
   if (tokenized_)
     return token_list_.size();
@@ -46,14 +71,14 @@ int Tokenizer::WordCount(SqlErrors::Type &error_code) {
 std::string Tokenizer::Word(int index, SqlErrors::Type &error_code) {
   if (!tokenized_) {
     error_code = SqlErrors::TOKENIZER_NOT_INITIALIZED;
-    return nullptr;
+    return std::string();
   }
 
   if (index < token_list_.size())
     return token_list_[index];
 
   error_code = SqlErrors::TOKENIZER_INVALID_INDEX;
-  return nullptr;
+  return std::string();
 }
 
 // Private

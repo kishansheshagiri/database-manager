@@ -12,6 +12,8 @@ class Tokenizer {
   Tokenizer(std::string input_string);
 
   void Tokenize(SqlErrors::Type &error_code);
+  void HandleSelectAll();
+
   int WordCount(SqlErrors::Type &error_code);
   std::string Word(int index, SqlErrors::Type &error_code);
 

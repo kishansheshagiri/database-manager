@@ -12,6 +12,7 @@ class SqlParser {
   void Parse(SqlErrors::Type &error_code);
 
  private:
+  void ValidateStatement(SqlErrors::Type& error_code);
   void ValidateTableName(const std::string& name,
       SqlErrors::Type& error_code);
   void ValidateAttributeName(const std::string& name,

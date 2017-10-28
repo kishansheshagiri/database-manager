@@ -9,6 +9,13 @@ void SqlParser::SetQuery(std::string query) {
 void SqlParser::Parse(SqlErrors::Type& error_code) {
   tokenizer_ = std::make_unique<Tokenizer>(input_query_);
   tokenizer_->Tokenize(error_code);
+  tokenizer_->HandleSelectAll();
+}
+
+void SqlParser::ValidateStatement(SqlErrors::Type& error_code) {
+  std::string statement_keyword = tokenizer_->Word(0, error_code);
+  if (error_code != SqlErrors::NO_ERROR)
+    return;
 }
 
 void SqlParser::ValidateTableName(const std::string& name,
