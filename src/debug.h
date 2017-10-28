@@ -3,6 +3,10 @@
 
 #include <iostream>
 
-#define DEBUG 0
+#if defined(DEBUG)
+#define DEBUG_MSG(str) do { std::cout << str << std::endl; } while( false )
+#else
+#define DEBUG_MSG(str) do { } while ( false )
+#endif
 
 #endif // SRC_DEBUG_H

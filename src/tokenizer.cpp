@@ -10,13 +10,12 @@ Tokenizer::Tokenizer(std::string input_string)
 
 void Tokenizer::Tokenize(SqlErrors::Type &error_code) {
   if (input_string_.length() == 0) {
+    DEBUG_MSG(__FILE__ << ":" << __LINE__);
     error_code = SqlErrors::TOKENIZER_EMPTY_INPUT;
     return;
   }
 
-  #ifdef DEBUG
-    std::cout << "Input: " << input_string_ << std::endl;
-  #endif
+  DEBUG_MSG("Input: " << input_string_);
 
   cleanupOperators();
 
@@ -27,17 +26,17 @@ void Tokenizer::Tokenize(SqlErrors::Type &error_code) {
       last;
   token_list_ = {first, last};
 
-  #ifdef DEBUG
-    std::cout << "Tokens:" << std::endl;
-    for (auto printer:token_list_) std::cout << "\t" << printer << std::endl;
-  #endif
+  DEBUG_MSG("Tokens:");
+  for (auto printer:token_list_) DEBUG_MSG("\t" << printer);
 
   tokenized_ = true;
 }
 
 void Tokenizer::HandleSelectAll() {
-  if (!tokenized_ || token_list_.size() <= 1)
+  if (!tokenized_ || token_list_.size() <= 1) {
+    DEBUG_MSG(__FILE__ << ":" << __LINE__);
     return;
+  }
 
   std::vector<std::string> select_split;
 
@@ -47,6 +46,7 @@ void Tokenizer::HandleSelectAll() {
     token_list_[0] = select_split[0];
     token_list_.insert(token_list_.begin() + 1, "*");
     token_list_.insert(token_list_.begin() + 2, select_split[1]);
+    DEBUG_MSG(__FILE__ << ":" << __LINE__);
     return;
   }
 
@@ -57,12 +57,15 @@ void Tokenizer::HandleSelectAll() {
     token_list_[1] = select_split[0];
     token_list_.insert(token_list_.begin() + 2, "*");
     token_list_.insert(token_list_.begin() + 3, select_split[1]);
+    DEBUG_MSG(__FILE__ << ":" << __LINE__);
   }
 }
 
 int Tokenizer::WordCount(SqlErrors::Type &error_code) {
-  if (tokenized_)
+  if (tokenized_) {
+    DEBUG_MSG(__FILE__ << ":" << __LINE__);
     return token_list_.size();
+  }
 
   error_code = SqlErrors::TOKENIZER_NOT_INITIALIZED;
   return -1;
@@ -70,12 +73,15 @@ int Tokenizer::WordCount(SqlErrors::Type &error_code) {
 
 std::string Tokenizer::Word(int index, SqlErrors::Type &error_code) {
   if (!tokenized_) {
+    DEBUG_MSG(__FILE__ << ":" << __LINE__);
     error_code = SqlErrors::TOKENIZER_NOT_INITIALIZED;
     return std::string();
   }
 
-  if (index < token_list_.size())
+  if (index < token_list_.size()) {
+    DEBUG_MSG(__FILE__ << ":" << __LINE__);
     return token_list_[index];
+  }
 
   error_code = SqlErrors::TOKENIZER_INVALID_INDEX;
   return std::string();

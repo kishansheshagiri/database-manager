@@ -2,6 +2,7 @@
 #include <sstream>
 #include <string>
 
+#include "debug.h"
 #include "query_manager.h"
 #include "sql_errors.h"
 
@@ -19,14 +20,14 @@ int main(int argc, char *argv[]) {
     SqlErrors::Type error_code = SqlErrors::NO_ERROR;
     query_manager->SetQuery(new_line, error_code);
     if (error_code != SqlErrors::NO_ERROR) {
-      std::cout << error_code << std::endl;
+      DEBUG_MSG(__FILE__ << ":" << __LINE__ << ": " << error_code);
       break;
     }
 
     // Start executing query
     query_manager->ExecuteQuery(error_code);
 
-    std::cout << error_code << std::endl << std::endl;
+    DEBUG_MSG(__FILE__ << ":" << __LINE__ << ": "<< error_code << std::endl);
   }
 
   delete query_manager;
