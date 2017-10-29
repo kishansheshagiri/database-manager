@@ -1,6 +1,7 @@
 #include "query_manager.h"
 
 #include "debug.h"
+#include "sql_node.h"
 
 QueryManager *QueryManager::manager_ = nullptr;
 
@@ -26,9 +27,12 @@ void QueryManager::SetQuery(std::string query, SqlErrors::Type &error_code) {
 
 void QueryManager::ExecuteQuery(SqlErrors::Type &error_code) {
   parser_->SetQuery(sql_query_);
-  parser_->Parse(error_code);
+
+  SqlNode *sql_node = new SqlNode(SqlNode::NODE_TYPE_OPERAND, "Statement");
+  parser_->Parse(sql_node, error_code);
   if (error_code != SqlErrors::NO_ERROR) {
     DEBUG_MSG(__FILE__ << ":" << __LINE__);
+    delete sql_node;
     return;
   }
 }

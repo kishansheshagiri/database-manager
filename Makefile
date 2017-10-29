@@ -8,6 +8,7 @@ SOURCES = StorageManager.cpp \
 					main.cpp \
 					query_manager.cpp \
 					sql_errors.cpp \
+					sql_node.cpp \
 					sql_parser.cpp \
 					tokenizer.cpp
 
