@@ -12,9 +12,15 @@ class SqlParser {
   void Parse(SqlNode *node, SqlErrors::Type& error_code);
 
  private:
+  bool readWord(std::string& word);
   bool readWordAndUpdate(std::string& word);
   bool readWordAndUpdate(std::string& word, bool& is_list);
+  bool readLiteralAndUpdate(std::string& literal);
   void skipComma();
+
+  bool isInteger(std::string& integer);
+  bool isCompOp(std::string& comp_op);
+  bool isOperatorSign(std::string& sign);
   bool isEndOfStatement();
 
   SqlNode *createNodeAndAppendAsChild(SqlNode *node,
@@ -33,6 +39,17 @@ class SqlParser {
   bool handleTableList(SqlNode *node);
   bool handleInsertTuples(SqlNode *node);
   bool handleAttributeList(SqlNode *node);
+  bool handleValue(SqlNode *node);
+  bool handleValueList(SqlNode *node);
+  bool handleSearchCondition(SqlNode *node);
+  bool handleBooleanTerm(SqlNode *node);
+  bool handleBooleanFactor(SqlNode *node);
+  bool handleExpression(SqlNode *node);
+  bool handleTerm(SqlNode *node);
+  bool handleColumnName(SqlNode *node);
+  bool handleTableName(SqlNode *node);
+  bool handleAttributeName(SqlNode *node);
+  bool handleCompOp(SqlNode *node);
 
   std::string input_query_;
   int current_query_position_;

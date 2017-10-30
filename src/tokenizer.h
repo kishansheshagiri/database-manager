@@ -11,9 +11,9 @@ class Tokenizer {
  public:
   Tokenizer();
 
-  void CleanupSpaces(std::string& input);
-
-  bool ReadOneWord(const std::string list, std::string& word);
+  bool ReadOneWord(const std::string& list, std::string& word,
+      std::string& trailing_characters);
+  bool ReadOneWord(const std::string& list, std::string& word);
 };
 
 #endif // SRC_TOKENIZER_H

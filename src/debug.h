@@ -4,8 +4,8 @@
 #include <iostream>
 
 #if defined(DEBUG)
-#define DEBUG_MSG(str) do { std::cout << __FUNCTION__ << ":" << \
-    __LINE__ << " " << str << std::endl; } while( false )
+#define DEBUG_MSG(str) do { std::cout << __FILE__ << ": " << __FUNCTION__ << \
+    ": " << __LINE__ << ":\t " << str << std::endl; } while( false )
 #else
 #define DEBUG_MSG(str) do { } while ( false )
 #endif
