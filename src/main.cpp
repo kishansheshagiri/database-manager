@@ -27,7 +27,7 @@ int main(int argc, char *argv[]) {
     // Start executing query
     query_manager->ExecuteQuery(error_code);
 
-    DEBUG_MSG(__FILE__ << ":" << __LINE__ << ": "<< error_code << std::endl);
+    std::cout << error_code << std::endl << std::endl;
   }
 
   delete query_manager;

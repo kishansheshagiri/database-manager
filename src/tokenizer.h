@@ -12,8 +12,7 @@ class Tokenizer {
   Tokenizer();
 
   bool ReadOneWord(const std::string& list, std::string& word,
-      std::string& trailing_characters);
-  bool ReadOneWord(const std::string& list, std::string& word);
+      char& separator, int& leading_spaces);
 };
 
 #endif // SRC_TOKENIZER_H
