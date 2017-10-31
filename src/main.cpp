@@ -19,9 +19,9 @@ int main(int argc, char *argv[]) {
     // Set Query
     SqlErrors::Type error_code = SqlErrors::NO_ERROR;
     query_manager->SetQuery(new_line, error_code);
-    if (error_code != SqlErrors::NO_ERROR) {
-      DEBUG_MSG(__FILE__ << ":" << __LINE__ << ": " << error_code);
-      break;
+    if (error_code == SqlErrors::EMPTY_STATEMENT) {
+      std::cout << std::endl;
+      continue;
     }
 
     // Start executing query
