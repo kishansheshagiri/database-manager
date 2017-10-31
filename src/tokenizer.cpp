@@ -3,7 +3,7 @@
 #include "debug.h"
 #include "sql_errors.h"
 
-const std::string symbol_list = " ,.()<>=+-";
+const std::string symbol_list = " ,.()<>=+-*";
 
 Tokenizer::Tokenizer() {
 }
@@ -18,7 +18,6 @@ bool Tokenizer::ReadOneWord(const std::string& list, std::string& word,
   std::size_t symbol_position = list.find_first_of(symbol_list);
   if (symbol_position == std::string::npos) {
     word = list;
-    // DEBUG_MSG("No separator found: " << word);
     return true;
   }
 
@@ -38,6 +37,21 @@ bool Tokenizer::ReadOneWord(const std::string& list, std::string& word,
     leading_spaces++;
   }
 
-  // DEBUG_MSG(word);
   return true;
+}
+
+bool Tokenizer::ReadLiteral(const std::string& input, std::string& literal) {
+  literal.clear();
+  if (input[0] == '\"') {
+    int it = 1;
+    while (input[it] != '\"' && it < input.length()) {
+      literal.push_back(input[it++]);
+    }
+
+    DEBUG_MSG("Literal: " << literal);
+    return true;
+  }
+
+  DEBUG_MSG("");
+  return false;
 }

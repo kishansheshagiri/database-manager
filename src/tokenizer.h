@@ -13,6 +13,7 @@ class Tokenizer {
 
   bool ReadOneWord(const std::string& list, std::string& word,
       char& separator, int& leading_spaces);
+  bool ReadLiteral(const std::string& input, std::string& literal);
 };
 
 #endif // SRC_TOKENIZER_H

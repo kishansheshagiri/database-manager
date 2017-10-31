@@ -14,9 +14,8 @@ class SqlParser {
  private:
   bool readWord(std::string& word);
   bool readWordAndUpdate(std::string& word);
-  bool readWordAndUpdate(std::string& word, bool& is_list);
   bool readLiteralAndUpdate(std::string& literal);
-  void skipComma();
+  void consumeSpaceCharacters();
 
   bool isInteger(std::string& integer);
   bool isCompOp(std::string& comp_op);
