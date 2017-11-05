@@ -13,13 +13,14 @@ class SqlParser {
 
  private:
   bool readWord(std::string& word);
-  bool readWordAndUpdate(std::string& word);
-  bool readLiteralAndUpdate(std::string& literal);
+  bool consumeWord(std::string& word);
+  bool consumeLiteral(std::string& literal);
   void consumeSpaceCharacters();
 
-  bool isInteger(std::string& integer);
-  bool isCompOp(std::string& comp_op);
-  bool isOperatorSign(std::string& sign);
+  bool isTableName(const std::string & table_name);
+  bool isInteger(const std::string& integer);
+  bool isCompOp(const std::string& comp_op);
+  bool isOperatorSign(const std::string& sign);
   bool isEndOfStatement();
 
   SqlNode *createNodeAndAppendAsChild(SqlNode *node,

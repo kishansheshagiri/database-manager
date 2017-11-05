@@ -48,7 +48,7 @@ bool SqlParser::readWord(std::string& word) {
   return true;
 }
 
-bool SqlParser::readWordAndUpdate(std::string& word) {
+bool SqlParser::consumeWord(std::string& word) {
   if (current_query_position_ >= input_query_.size()) {
     DEBUG_MSG("");
     return false;
@@ -70,13 +70,13 @@ bool SqlParser::readWordAndUpdate(std::string& word) {
 
   if (!word.compare(" ")) {
     current_query_position_--;
-    return readWordAndUpdate(word);
+    return consumeWord(word);
   }
 
   return true;
 }
 
-bool SqlParser::readLiteralAndUpdate(std::string& literal) {
+bool SqlParser::consumeLiteral(std::string& literal) {
   if (current_query_position_ >= input_query_.size()) {
     DEBUG_MSG("");
     return false;
@@ -100,15 +100,19 @@ void SqlParser::consumeSpaceCharacters() {
   }
 }
 
-bool SqlParser::isInteger(std::string& integer) {
+bool SqlParser::isTableName(const std::string& table_name) {
+  return std::regex_match(table_name, std::regex("^[a-z]([a-z0-9])*$"));
+}
+
+bool SqlParser::isInteger(const std::string& integer) {
   return std::regex_match(integer, std::regex("^[0-9]+$"));
 }
 
-bool SqlParser::isCompOp(std::string& comp_op) {
+bool SqlParser::isCompOp(const std::string& comp_op) {
   return std::regex_match(comp_op, std::regex("^[<>=]$"));
 }
 
-bool SqlParser::isOperatorSign(std::string& sign) {
+bool SqlParser::isOperatorSign(const std::string& sign) {
   return std::regex_match(sign, std::regex("^[+-*]$"));
 }
 
@@ -173,12 +177,12 @@ bool SqlParser::handleStatement(SqlNode *node) {
 
 bool SqlParser::handleCreateTableStatement(SqlNode *node) {
   std::string word;
-  if (!readWordAndUpdate(word) || word.compare("CREATE")) {
+  if (!consumeWord(word) || word.compare("CREATE")) {
     DEBUG_MSG("");
     return false;
   }
 
-  if (!readWordAndUpdate(word) || word.compare("TABLE")) {
+  if (!consumeWord(word) || word.compare("TABLE")) {
     DEBUG_MSG("");
     return false;
   }
@@ -189,7 +193,7 @@ bool SqlParser::handleCreateTableStatement(SqlNode *node) {
     return false;
   }
 
-  if (!readWordAndUpdate(word) || word.compare("(")) {
+  if (!consumeWord(word) || word.compare("(")) {
     DEBUG_MSG("");
     return false;
   }
@@ -200,7 +204,7 @@ bool SqlParser::handleCreateTableStatement(SqlNode *node) {
     return false;
   }
 
-  if (!readWordAndUpdate(word) || word.compare(")")) {
+  if (!consumeWord(word) || word.compare(")")) {
     DEBUG_MSG("");
     return false;
   }
@@ -210,12 +214,12 @@ bool SqlParser::handleCreateTableStatement(SqlNode *node) {
 
 bool SqlParser::handleDropTableStatement(SqlNode *node) {
   std::string word;
-  if (!readWordAndUpdate(word) || word.compare("DROP")) {
+  if (!consumeWord(word) || word.compare("DROP")) {
     DEBUG_MSG("");
     return false;
   }
 
-  if (!readWordAndUpdate(word) || word.compare("TABLE")) {
+  if (!consumeWord(word) || word.compare("TABLE")) {
     DEBUG_MSG("");
     return false;
   }
@@ -231,13 +235,13 @@ bool SqlParser::handleDropTableStatement(SqlNode *node) {
 
 bool SqlParser::handleSelectStatement(SqlNode *node) {
   std::string word;
-  if (!readWordAndUpdate(word) || word.compare("SELECT")) {
+  if (!consumeWord(word) || word.compare("SELECT")) {
     DEBUG_MSG("");
     return false;
   }
 
   if (readWord(word) && !word.compare("DISTINCT")) {
-    readWordAndUpdate(word);
+    consumeWord(word);
     createNodeAndAppendAsChild(node, SqlNode::NODE_TYPE_DISTINCT);
   }
 
@@ -246,7 +250,7 @@ bool SqlParser::handleSelectStatement(SqlNode *node) {
     return false;
   }
 
-  if (!readWordAndUpdate(word) || word.compare("FROM")) {
+  if (!consumeWord(word) || word.compare("FROM")) {
     DEBUG_MSG("");
     return false;
   }
@@ -258,7 +262,7 @@ bool SqlParser::handleSelectStatement(SqlNode *node) {
   }
 
   if (readWord(word) && !word.compare("WHERE")) {
-    readWordAndUpdate(word);
+    consumeWord(word);
     if (!handleSearchCondition(createNodeAndAppendAsChild(
         node, SqlNode::NODE_TYPE_SEARCH_CONDITION))) {
       return false;
@@ -267,8 +271,8 @@ bool SqlParser::handleSelectStatement(SqlNode *node) {
 
   if (readWord(word) && !word.compare("ORDER")) {
     DEBUG_MSG("");
-    readWordAndUpdate(word);
-    if (readWordAndUpdate(word) && !word.compare("BY")) {
+    consumeWord(word);
+    if (consumeWord(word) && !word.compare("BY")) {
       DEBUG_MSG("");
       if (!handleColumnName(createNodeAndAppendAsChild(
           node, SqlNode::NODE_TYPE_COLUMN_NAME))) {
@@ -285,12 +289,12 @@ bool SqlParser::handleSelectStatement(SqlNode *node) {
 
 bool SqlParser::handleDeleteStatement(SqlNode *node) {
   std::string word;
-  if (!readWordAndUpdate(word) || word.compare("DELETE")) {
+  if (!consumeWord(word) || word.compare("DELETE")) {
     DEBUG_MSG("");
     return false;
   }
 
-  if (!readWordAndUpdate(word) || word.compare("FROM")) {
+  if (!consumeWord(word) || word.compare("FROM")) {
     DEBUG_MSG("");
     return false;
   }
@@ -302,7 +306,7 @@ bool SqlParser::handleDeleteStatement(SqlNode *node) {
 
   if (readWord(word) && !word.compare("WHERE")) {
     DEBUG_MSG("");
-    readWordAndUpdate(word);
+    consumeWord(word);
     if (!handleSearchCondition(createNodeAndAppendAsChild(
         node, SqlNode::NODE_TYPE_SEARCH_CONDITION))) {
       return false;
@@ -314,12 +318,12 @@ bool SqlParser::handleDeleteStatement(SqlNode *node) {
 
 bool SqlParser::handleInsertStatement(SqlNode *node) {
   std::string word;
-  if (!readWordAndUpdate(word) || word.compare("INSERT")) {
+  if (!consumeWord(word) || word.compare("INSERT")) {
     DEBUG_MSG("");
     return false;
   }
 
-  if (!readWordAndUpdate(word) || word.compare("INTO")) {
+  if (!consumeWord(word) || word.compare("INTO")) {
     DEBUG_MSG("");
     return false;
   }
@@ -330,7 +334,7 @@ bool SqlParser::handleInsertStatement(SqlNode *node) {
     return false;
   }
 
-  if (!readWordAndUpdate(word) || word.compare("(")) {
+  if (!consumeWord(word) || word.compare("(")) {
     DEBUG_MSG("");
     return false;
   }
@@ -341,7 +345,7 @@ bool SqlParser::handleInsertStatement(SqlNode *node) {
     return false;
   }
 
-  if (!readWordAndUpdate(word) || word.compare(")")) {
+  if (!consumeWord(word) || word.compare(")")) {
     DEBUG_MSG("");
     return false;
   }
@@ -370,7 +374,7 @@ bool SqlParser::handleAttributeTypeList(SqlNode *node) {
 
   std::string word;
   if (readWord(word) && !word.compare(",")) {
-    readWordAndUpdate(word);
+    consumeWord(word);
     return handleAttributeTypeList(node);
   }
 
@@ -379,7 +383,7 @@ bool SqlParser::handleAttributeTypeList(SqlNode *node) {
 
 bool SqlParser::handleDataType(SqlNode *node) {
   std::string data_type;
-  if (!readWordAndUpdate(data_type)) {
+  if (!consumeWord(data_type)) {
     DEBUG_MSG("");
     return false;
   }
@@ -398,8 +402,9 @@ bool SqlParser::handleSelectList(SqlNode *node) {
   DEBUG_MSG("");
   if (readWord(word) && !word.compare("*")) {
     DEBUG_MSG("");
-    readWordAndUpdate(word);
-    node->SetValue(word);
+    consumeWord(word);
+    createNodeAndAppendAsChild(
+        node, SqlNode::NODE_TYPE_COLUMN_NAME, word);
     return true;
   } else {
     return handleSelectSublist(node);
@@ -415,7 +420,7 @@ bool SqlParser::handleSelectSublist(SqlNode *node) {
 
   std::string word;
   if (readWord(word) && !word.compare(",")) {
-    readWordAndUpdate(word);
+    consumeWord(word);
     return handleSelectSublist(node);
   }
 
@@ -432,7 +437,7 @@ bool SqlParser::handleTableList(SqlNode *node) {
 
   std::string word;
   if (readWord(word) && !word.compare(",")) {
-    readWordAndUpdate(word);
+    consumeWord(word);
     return handleTableList(node);
   }
 
@@ -444,9 +449,9 @@ bool SqlParser::handleInsertTuples(SqlNode *node) {
   std::string word;
   if (readWord(word) && !word.compare("VALUES")) {
     DEBUG_MSG("");
-    readWordAndUpdate(word);
+    consumeWord(word);
 
-    if (!readWordAndUpdate(word) || word.compare("(")) {
+    if (!consumeWord(word) || word.compare("(")) {
       DEBUG_MSG("");
       return false;
     }
@@ -457,7 +462,7 @@ bool SqlParser::handleInsertTuples(SqlNode *node) {
       return false;
     }
 
-    if (!readWordAndUpdate(word) || word.compare(")")) {
+    if (!consumeWord(word) || word.compare(")")) {
       DEBUG_MSG("");
       return false;
     }
@@ -478,7 +483,7 @@ bool SqlParser::handleAttributeList(SqlNode *node) {
 
   std::string word;
   if (readWord(word) && !word.compare(",")) {
-    readWordAndUpdate(word);
+    consumeWord(word);
     return handleAttributeList(node);
   }
 
@@ -490,12 +495,12 @@ bool SqlParser::handleValue(SqlNode *node) {
   std::string word;
   if (readWord(word) && (!word.compare("NULL") || isInteger(word))) {
     DEBUG_MSG("");
-    readWordAndUpdate(word);
+    consumeWord(word);
     node->SetValue(word);
     return true;
   }
 
-  if (readLiteralAndUpdate(word)) {
+  if (consumeLiteral(word)) {
     DEBUG_MSG("");
     node->SetValue(word);
     return true;
@@ -514,7 +519,7 @@ bool SqlParser::handleValueList(SqlNode *node) {
 
   std::string word;
   if (readWord(word) && !word.compare(",")) {
-    readWordAndUpdate(word);
+    consumeWord(word);
     return handleValueList(node);
   }
 
@@ -531,7 +536,8 @@ bool SqlParser::handleSearchCondition(SqlNode *node) {
 
   std::string word;
   if (readWord(word) && !word.compare("OR")) {
-    readWordAndUpdate(word);
+    consumeWord(word);
+    node->SetValue(word);
     return handleSearchCondition(node);
   }
 
@@ -548,7 +554,8 @@ bool SqlParser::handleBooleanTerm(SqlNode *node) {
 
   std::string word;
   if (readWord(word) && !word.compare("AND")) {
-    readWordAndUpdate(word);
+    consumeWord(word);
+    node->SetValue(word);
     return handleBooleanTerm(node);
   }
 
@@ -575,7 +582,7 @@ bool SqlParser::handleBooleanFactor(SqlNode *node) {
 bool SqlParser::handleExpression(SqlNode *node) {
   std::string word;
   if (readWord(word) && !word.compare("(")) {
-    readWordAndUpdate(word);
+    consumeWord(word);
     if (!handleTerm(createNodeAndAppendAsChild(
         node, SqlNode::NODE_TYPE_TERM))) {
       DEBUG_MSG("");
@@ -593,7 +600,7 @@ bool SqlParser::handleExpression(SqlNode *node) {
       return false;
     }
 
-    if (!readWordAndUpdate(word) || word.compare(")")) {
+    if (!consumeWord(word) || word.compare(")")) {
       DEBUG_MSG("");
       return false;
     }
@@ -607,7 +614,7 @@ bool SqlParser::handleExpression(SqlNode *node) {
 
 bool SqlParser::handleTerm(SqlNode *node) {
   std::string word;
-  if (readLiteralAndUpdate(word)) {
+  if (consumeLiteral(word)) {
     DEBUG_MSG("");
     node->SetValue(word);
     return true;
@@ -615,7 +622,7 @@ bool SqlParser::handleTerm(SqlNode *node) {
 
   if (readWord(word) && isInteger(word)) {
     DEBUG_MSG("");
-    readWordAndUpdate(word);
+    consumeWord(word);
     node->SetValue(word);
     return true;
   }
@@ -636,7 +643,7 @@ bool SqlParser::handleColumnName(SqlNode *node) {
     }
 
     // To skip the '.'
-    if (!readWordAndUpdate(word) || word.compare(".")) {
+    if (!consumeWord(word) || word.compare(".")) {
       DEBUG_MSG("");
       return false;
     }
@@ -648,12 +655,12 @@ bool SqlParser::handleColumnName(SqlNode *node) {
 
 bool SqlParser::handleTableName(SqlNode *node) {
   std::string table_name;
-  if (!readWordAndUpdate(table_name)) {
+  if (!consumeWord(table_name)) {
     DEBUG_MSG("");
     return false;
   }
 
-  if (std::regex_match(table_name, std::regex("^[a-z]([a-z0-9])*$"))) {
+  if (isTableName(table_name)) {
     node->SetValue(table_name);
     return true;
   }
@@ -673,7 +680,7 @@ bool SqlParser::handleAttributeName(SqlNode *node) {
 
 bool SqlParser::handleCompOp(SqlNode *node) {
   std::string comp_op;
-  if (readWordAndUpdate(comp_op) && isCompOp(comp_op)) {
+  if (consumeWord(comp_op) && isCompOp(comp_op)) {
     node->SetValue(comp_op);
     return true;
   }
@@ -684,7 +691,7 @@ bool SqlParser::handleCompOp(SqlNode *node) {
 
 bool SqlParser::handleOperatorSign(SqlNode *node) {
   std::string sign;
-  if (readWordAndUpdate(sign) && isOperatorSign(sign)) {
+  if (consumeWord(sign) && isOperatorSign(sign)) {
     node->SetValue(sign);
     return true;
   }
