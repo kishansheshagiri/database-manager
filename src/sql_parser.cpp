@@ -9,7 +9,8 @@ void SqlParser::SetQuery(std::string query) {
 }
 
 void SqlParser::Parse(SqlNode *node, SqlErrors::Type& error_code) {
-  if (input_query_.size() == 0 || !node) {
+  if (input_query_.size() == 0 || !node ||
+      node->Type() != SqlNode::NODE_TYPE_STATEMENT) {
     DEBUG_MSG("");
     error_code = SqlErrors::EMPTY_STATEMENT;
     return;
@@ -139,31 +140,31 @@ bool SqlParser::handleStatement(SqlNode *node) {
   if (!first_word.compare("CREATE")) {
     DEBUG_MSG("");
     return handleCreateTableStatement(createNodeAndAppendAsChild(
-        node, SqlNode::NODE_TYPE_OPERAND, "create-table-statement"));
+        node, SqlNode::NODE_TYPE_CREATE_TABLE_STATEMENT));
   }
 
   if (!first_word.compare("DROP")) {
     DEBUG_MSG("");
     return handleDropTableStatement(createNodeAndAppendAsChild(
-        node, SqlNode::NODE_TYPE_OPERAND, "drop-table-statement"));
+        node, SqlNode::NODE_TYPE_DROP_TABLE_STATEMENT));
   }
 
   if (!first_word.compare("SELECT")) {
     DEBUG_MSG("");
     return handleSelectStatement(createNodeAndAppendAsChild(
-        node, SqlNode::NODE_TYPE_OPERAND, "select-statement"));
+        node, SqlNode::NODE_TYPE_SELECT_STATEMENT));
   }
 
   if (!first_word.compare("DELETE")) {
     DEBUG_MSG("");
     return handleDeleteStatement(createNodeAndAppendAsChild(
-        node, SqlNode::NODE_TYPE_OPERAND, "delete-statement"));
+        node, SqlNode::NODE_TYPE_DELETE_STATEMENT));
   }
 
   if (!first_word.compare("INSERT")) {
     DEBUG_MSG("");
     return handleInsertStatement(createNodeAndAppendAsChild(
-        node, SqlNode::NODE_TYPE_OPERAND, "insert-statement"));
+        node, SqlNode::NODE_TYPE_INSERT_STATEMENT));
   }
 
   DEBUG_MSG("");
@@ -176,16 +177,14 @@ bool SqlParser::handleCreateTableStatement(SqlNode *node) {
     DEBUG_MSG("");
     return false;
   }
-  createNodeAndAppendAsChild(node, SqlNode::NODE_TYPE_OPERAND, word);
 
   if (!readWordAndUpdate(word) || word.compare("TABLE")) {
     DEBUG_MSG("");
     return false;
   }
-  createNodeAndAppendAsChild(node, SqlNode::NODE_TYPE_OPERAND, word);
 
   if (!handleTableName(createNodeAndAppendAsChild(
-      node, SqlNode::NODE_TYPE_OPERAND, "table-name"))) {
+      node, SqlNode::NODE_TYPE_TABLE_NAME))) {
     DEBUG_MSG("");
     return false;
   }
@@ -196,7 +195,7 @@ bool SqlParser::handleCreateTableStatement(SqlNode *node) {
   }
 
   if (!handleAttributeTypeList(createNodeAndAppendAsChild(
-      node, SqlNode::NODE_TYPE_OPERAND, "attribute-type-list"))) {
+      node, SqlNode::NODE_TYPE_ATTRIBUTE_TYPE_LIST))) {
     DEBUG_MSG("");
     return false;
   }
@@ -215,16 +214,14 @@ bool SqlParser::handleDropTableStatement(SqlNode *node) {
     DEBUG_MSG("");
     return false;
   }
-  createNodeAndAppendAsChild(node, SqlNode::NODE_TYPE_OPERAND, word);
 
   if (!readWordAndUpdate(word) || word.compare("TABLE")) {
     DEBUG_MSG("");
     return false;
   }
-  createNodeAndAppendAsChild(node, SqlNode::NODE_TYPE_OPERAND, word);
 
   if (!handleTableName(createNodeAndAppendAsChild(
-      node, SqlNode::NODE_TYPE_OPERAND, "table-name"))) {
+      node, SqlNode::NODE_TYPE_TABLE_NAME))) {
     DEBUG_MSG("");
     return false;
   }
@@ -238,15 +235,14 @@ bool SqlParser::handleSelectStatement(SqlNode *node) {
     DEBUG_MSG("");
     return false;
   }
-  createNodeAndAppendAsChild(node, SqlNode::NODE_TYPE_OPERAND, word);
 
   if (readWord(word) && !word.compare("DISTINCT")) {
     readWordAndUpdate(word);
-    createNodeAndAppendAsChild(node, SqlNode::NODE_TYPE_OPERAND, word);
+    createNodeAndAppendAsChild(node, SqlNode::NODE_TYPE_DISTINCT);
   }
 
   if (!handleSelectList(createNodeAndAppendAsChild(
-      node, SqlNode::NODE_TYPE_OPERAND, "select-list"))) {
+      node, SqlNode::NODE_TYPE_SELECT_LIST))) {
     return false;
   }
 
@@ -254,19 +250,17 @@ bool SqlParser::handleSelectStatement(SqlNode *node) {
     DEBUG_MSG("");
     return false;
   }
-  createNodeAndAppendAsChild(node, SqlNode::NODE_TYPE_OPERAND, word);
 
   if (!handleTableList(createNodeAndAppendAsChild(
-      node, SqlNode::NODE_TYPE_OPERAND, "table-list"))) {
+      node, SqlNode::NODE_TYPE_TABLE_LIST))) {
     DEBUG_MSG("");
     return false;
   }
 
   if (readWord(word) && !word.compare("WHERE")) {
     readWordAndUpdate(word);
-    createNodeAndAppendAsChild(node, SqlNode::NODE_TYPE_OPERAND, word);
     if (!handleSearchCondition(createNodeAndAppendAsChild(
-        node, SqlNode::NODE_TYPE_OPERAND, "search-condition"))) {
+        node, SqlNode::NODE_TYPE_SEARCH_CONDITION))) {
       return false;
     }
   }
@@ -274,12 +268,10 @@ bool SqlParser::handleSelectStatement(SqlNode *node) {
   if (readWord(word) && !word.compare("ORDER")) {
     DEBUG_MSG("");
     readWordAndUpdate(word);
-    createNodeAndAppendAsChild(node, SqlNode::NODE_TYPE_OPERAND, word);
     if (readWordAndUpdate(word) && !word.compare("BY")) {
       DEBUG_MSG("");
-      createNodeAndAppendAsChild(node, SqlNode::NODE_TYPE_OPERAND, word);
       if (!handleColumnName(createNodeAndAppendAsChild(
-          node, SqlNode::NODE_TYPE_OPERAND, "column-name"))) {
+          node, SqlNode::NODE_TYPE_COLUMN_NAME))) {
         return false;
       }
     } else {
@@ -297,25 +289,22 @@ bool SqlParser::handleDeleteStatement(SqlNode *node) {
     DEBUG_MSG("");
     return false;
   }
-  createNodeAndAppendAsChild(node, SqlNode::NODE_TYPE_OPERAND, word);
 
   if (!readWordAndUpdate(word) || word.compare("FROM")) {
     DEBUG_MSG("");
     return false;
   }
-  createNodeAndAppendAsChild(node, SqlNode::NODE_TYPE_OPERAND, word);
 
   if (!handleTableName(createNodeAndAppendAsChild(
-      node, SqlNode::NODE_TYPE_OPERAND, "table-name"))) {
+      node, SqlNode::NODE_TYPE_TABLE_NAME))) {
     return false;
   }
 
   if (readWord(word) && !word.compare("WHERE")) {
     DEBUG_MSG("");
     readWordAndUpdate(word);
-    createNodeAndAppendAsChild(node, SqlNode::NODE_TYPE_OPERAND, word);
     if (!handleSearchCondition(createNodeAndAppendAsChild(
-        node, SqlNode::NODE_TYPE_OPERAND, "search-condition"))) {
+        node, SqlNode::NODE_TYPE_SEARCH_CONDITION))) {
       return false;
     }
   }
@@ -329,16 +318,14 @@ bool SqlParser::handleInsertStatement(SqlNode *node) {
     DEBUG_MSG("");
     return false;
   }
-  createNodeAndAppendAsChild(node, SqlNode::NODE_TYPE_OPERAND, word);
 
   if (!readWordAndUpdate(word) || word.compare("INTO")) {
     DEBUG_MSG("");
     return false;
   }
-  createNodeAndAppendAsChild(node, SqlNode::NODE_TYPE_OPERAND, word);
 
   if (!handleTableName(createNodeAndAppendAsChild(
-      node, SqlNode::NODE_TYPE_OPERAND, "table-name"))) {
+      node, SqlNode::NODE_TYPE_TABLE_NAME))) {
     DEBUG_MSG("");
     return false;
   }
@@ -349,7 +336,7 @@ bool SqlParser::handleInsertStatement(SqlNode *node) {
   }
 
   if (!handleAttributeList(createNodeAndAppendAsChild(
-      node, SqlNode::NODE_TYPE_OPERAND, "attribute-list"))) {
+      node, SqlNode::NODE_TYPE_ATTRIBUTE_LIST))) {
     DEBUG_MSG("");
     return false;
   }
@@ -360,7 +347,7 @@ bool SqlParser::handleInsertStatement(SqlNode *node) {
   }
 
   if (!handleInsertTuples(createNodeAndAppendAsChild(
-      node, SqlNode::NODE_TYPE_OPERAND, "insert-tuples"))) {
+      node, SqlNode::NODE_TYPE_INSERT_TUPLES))) {
     DEBUG_MSG("");
     return false;
   }
@@ -370,13 +357,13 @@ bool SqlParser::handleInsertStatement(SqlNode *node) {
 
 bool SqlParser::handleAttributeTypeList(SqlNode *node) {
   if (!handleAttributeName(createNodeAndAppendAsChild(
-      node, SqlNode::NODE_TYPE_OPERAND, "attribute-name"))) {
+      node, SqlNode::NODE_TYPE_ATTRIBUTE_NAME))) {
     DEBUG_MSG("");
     return false;
   }
 
   if (!handleDataType(createNodeAndAppendAsChild(
-      node, SqlNode::NODE_TYPE_OPERAND, "data-type"))) {
+      node, SqlNode::NODE_TYPE_DATA_TYPE))) {
     DEBUG_MSG("");
     return false;
   }
@@ -384,8 +371,7 @@ bool SqlParser::handleAttributeTypeList(SqlNode *node) {
   std::string word;
   if (readWord(word) && !word.compare(",")) {
     readWordAndUpdate(word);
-    return handleAttributeTypeList(createNodeAndAppendAsChild(
-        node, SqlNode::NODE_TYPE_OPERAND, "attribute-type-list"));
+    return handleAttributeTypeList(node);
   }
 
   return true;
@@ -398,20 +384,13 @@ bool SqlParser::handleDataType(SqlNode *node) {
     return false;
   }
 
-  if (!data_type.compare("INT")) {
+  if (data_type.compare("INT") && data_type.compare("STR20")) {
     DEBUG_MSG("");
-    createNodeAndAppendAsChild(node, SqlNode::NODE_TYPE_VALUE, data_type);
-    return true;
+    return false;
   }
 
-  if (!data_type.compare("STR20")) {
-    DEBUG_MSG("");
-    createNodeAndAppendAsChild(node, SqlNode::NODE_TYPE_VALUE, data_type);
-    return true;
-  }
-
-  DEBUG_MSG("");
-  return false;
+  node->SetValue(data_type);
+  return true;
 }
 
 bool SqlParser::handleSelectList(SqlNode *node) {
@@ -420,17 +399,16 @@ bool SqlParser::handleSelectList(SqlNode *node) {
   if (readWord(word) && !word.compare("*")) {
     DEBUG_MSG("");
     readWordAndUpdate(word);
-    createNodeAndAppendAsChild(node, SqlNode::NODE_TYPE_VALUE, word);
+    node->SetValue(word);
     return true;
   } else {
-    return handleSelectSublist(createNodeAndAppendAsChild(
-        node, SqlNode::NODE_TYPE_OPERAND, "select-sublist"));
+    return handleSelectSublist(node);
   }
 }
 
 bool SqlParser::handleSelectSublist(SqlNode *node) {
   if (!handleColumnName(createNodeAndAppendAsChild(
-      node, SqlNode::NODE_TYPE_OPERAND, "column-name"))) {
+      node, SqlNode::NODE_TYPE_COLUMN_NAME))) {
     DEBUG_MSG("");
     return false;
   }
@@ -438,8 +416,7 @@ bool SqlParser::handleSelectSublist(SqlNode *node) {
   std::string word;
   if (readWord(word) && !word.compare(",")) {
     readWordAndUpdate(word);
-    return handleSelectSublist(createNodeAndAppendAsChild(
-        node, SqlNode::NODE_TYPE_OPERAND, "select-sublist"));
+    return handleSelectSublist(node);
   }
 
   DEBUG_MSG("");
@@ -448,7 +425,7 @@ bool SqlParser::handleSelectSublist(SqlNode *node) {
 
 bool SqlParser::handleTableList(SqlNode *node) {
   if (!handleTableName(createNodeAndAppendAsChild(
-      node, SqlNode::NODE_TYPE_OPERAND, "table-name"))) {
+      node, SqlNode::NODE_TYPE_TABLE_NAME))) {
     DEBUG_MSG("");
     return false;
   }
@@ -456,8 +433,7 @@ bool SqlParser::handleTableList(SqlNode *node) {
   std::string word;
   if (readWord(word) && !word.compare(",")) {
     readWordAndUpdate(word);
-    return handleTableList(createNodeAndAppendAsChild(
-        node, SqlNode::NODE_TYPE_OPERAND, "table-list"));
+    return handleTableList(node);
   }
 
   DEBUG_MSG("");
@@ -469,7 +445,6 @@ bool SqlParser::handleInsertTuples(SqlNode *node) {
   if (readWord(word) && !word.compare("VALUES")) {
     DEBUG_MSG("");
     readWordAndUpdate(word);
-    createNodeAndAppendAsChild(node, SqlNode::NODE_TYPE_VALUE, word);
 
     if (!readWordAndUpdate(word) || word.compare("(")) {
       DEBUG_MSG("");
@@ -477,7 +452,7 @@ bool SqlParser::handleInsertTuples(SqlNode *node) {
     }
 
     if (!handleValueList(createNodeAndAppendAsChild(
-        node, SqlNode::NODE_TYPE_OPERAND, "value-list"))) {
+        node, SqlNode::NODE_TYPE_VALUE_LIST))) {
       DEBUG_MSG("");
       return false;
     }
@@ -491,12 +466,12 @@ bool SqlParser::handleInsertTuples(SqlNode *node) {
   }
 
   return handleSelectStatement(createNodeAndAppendAsChild(
-      node, SqlNode::NODE_TYPE_OPERAND, "select-statement"));
+      node, SqlNode::NODE_TYPE_SELECT_STATEMENT));
 }
 
 bool SqlParser::handleAttributeList(SqlNode *node) {
   if (!handleAttributeName(createNodeAndAppendAsChild(
-      node, SqlNode::NODE_TYPE_OPERAND, "attribute-name"))) {
+      node, SqlNode::NODE_TYPE_ATTRIBUTE_NAME))) {
     DEBUG_MSG("");
     return false;
   }
@@ -504,8 +479,7 @@ bool SqlParser::handleAttributeList(SqlNode *node) {
   std::string word;
   if (readWord(word) && !word.compare(",")) {
     readWordAndUpdate(word);
-    return handleAttributeList(createNodeAndAppendAsChild(
-        node, SqlNode::NODE_TYPE_OPERAND, "attribute-list"));
+    return handleAttributeList(node);
   }
 
   DEBUG_MSG("");
@@ -517,13 +491,13 @@ bool SqlParser::handleValue(SqlNode *node) {
   if (readWord(word) && (!word.compare("NULL") || isInteger(word))) {
     DEBUG_MSG("");
     readWordAndUpdate(word);
-    createNodeAndAppendAsChild(node, SqlNode::NODE_TYPE_VALUE, word);
+    node->SetValue(word);
     return true;
   }
 
   if (readLiteralAndUpdate(word)) {
     DEBUG_MSG("");
-    createNodeAndAppendAsChild(node, SqlNode::NODE_TYPE_VALUE, word);
+    node->SetValue(word);
     return true;
   }
 
@@ -533,7 +507,7 @@ bool SqlParser::handleValue(SqlNode *node) {
 
 bool SqlParser::handleValueList(SqlNode *node) {
   if (!handleValue(createNodeAndAppendAsChild(
-      node, SqlNode::NODE_TYPE_OPERAND, "value"))) {
+      node, SqlNode::NODE_TYPE_VALUE_LIST))) {
     DEBUG_MSG("");
     return false;
   }
@@ -541,8 +515,7 @@ bool SqlParser::handleValueList(SqlNode *node) {
   std::string word;
   if (readWord(word) && !word.compare(",")) {
     readWordAndUpdate(word);
-    return handleValueList(createNodeAndAppendAsChild(
-        node, SqlNode::NODE_TYPE_OPERAND, "value-list"));
+    return handleValueList(node);
   }
 
   DEBUG_MSG("");
@@ -551,7 +524,7 @@ bool SqlParser::handleValueList(SqlNode *node) {
 
 bool SqlParser::handleSearchCondition(SqlNode *node) {
   if (!handleBooleanTerm(createNodeAndAppendAsChild(
-      node, SqlNode::NODE_TYPE_OPERAND, "boolean-term"))) {
+      node, SqlNode::NODE_TYPE_BOOLEAN_TERM))) {
     DEBUG_MSG("");
     return false;
   }
@@ -559,9 +532,7 @@ bool SqlParser::handleSearchCondition(SqlNode *node) {
   std::string word;
   if (readWord(word) && !word.compare("OR")) {
     readWordAndUpdate(word);
-    createNodeAndAppendAsChild(node, SqlNode::NODE_TYPE_OPERAND, word);
-    return handleSearchCondition(createNodeAndAppendAsChild(
-        node, SqlNode::NODE_TYPE_OPERAND, "search-condition"));
+    return handleSearchCondition(node);
   }
 
   DEBUG_MSG("");
@@ -570,7 +541,7 @@ bool SqlParser::handleSearchCondition(SqlNode *node) {
 
 bool SqlParser::handleBooleanTerm(SqlNode *node) {
   if (!handleBooleanFactor(createNodeAndAppendAsChild(
-      node, SqlNode::NODE_TYPE_OPERAND, "boolean-factor"))) {
+      node, SqlNode::NODE_TYPE_BOOLEAN_FACTOR))) {
     DEBUG_MSG("");
     return false;
   }
@@ -578,9 +549,7 @@ bool SqlParser::handleBooleanTerm(SqlNode *node) {
   std::string word;
   if (readWord(word) && !word.compare("AND")) {
     readWordAndUpdate(word);
-    createNodeAndAppendAsChild(node, SqlNode::NODE_TYPE_OPERAND, word);
-    return handleSearchCondition(createNodeAndAppendAsChild(
-        node, SqlNode::NODE_TYPE_OPERAND, "boolean-term"));
+    return handleBooleanTerm(node);
   }
 
   DEBUG_MSG("");
@@ -589,19 +558,18 @@ bool SqlParser::handleBooleanTerm(SqlNode *node) {
 
 bool SqlParser::handleBooleanFactor(SqlNode *node) {
   if (!handleExpression(createNodeAndAppendAsChild(
-      node, SqlNode::NODE_TYPE_OPERAND, "expression"))) {
+      node, SqlNode::NODE_TYPE_EXPRESSION))) {
     DEBUG_MSG("");
     return false;
   }
 
-  if (!handleCompOp(createNodeAndAppendAsChild(
-      node, SqlNode::NODE_TYPE_OPERAND, "comp-op"))) {
+  if (!handleCompOp(node)) {
     DEBUG_MSG("");
     return false;
   }
 
   return handleExpression(createNodeAndAppendAsChild(
-      node, SqlNode::NODE_TYPE_OPERAND, "expression"));
+      node, SqlNode::NODE_TYPE_EXPRESSION));
 }
 
 bool SqlParser::handleExpression(SqlNode *node) {
@@ -609,16 +577,21 @@ bool SqlParser::handleExpression(SqlNode *node) {
   if (readWord(word) && !word.compare("(")) {
     readWordAndUpdate(word);
     if (!handleTerm(createNodeAndAppendAsChild(
-        node, SqlNode::NODE_TYPE_OPERAND, "term"))) {
+        node, SqlNode::NODE_TYPE_TERM))) {
       DEBUG_MSG("");
       return false;
     }
 
-    if (!readWordAndUpdate(word) || !isOperatorSign(word)) {
+    if (handleOperatorSign(node)) {
       DEBUG_MSG("");
       return false;
     }
-    createNodeAndAppendAsChild(node, SqlNode::NODE_TYPE_OPERAND, word);
+
+    if (!handleTerm(createNodeAndAppendAsChild(
+        node, SqlNode::NODE_TYPE_TERM))) {
+      DEBUG_MSG("");
+      return false;
+    }
 
     if (!readWordAndUpdate(word) || word.compare(")")) {
       DEBUG_MSG("");
@@ -629,26 +602,26 @@ bool SqlParser::handleExpression(SqlNode *node) {
   }
 
   return handleTerm(createNodeAndAppendAsChild(
-      node, SqlNode::NODE_TYPE_OPERAND, "term"));
+      node, SqlNode::NODE_TYPE_TERM));
 }
 
 bool SqlParser::handleTerm(SqlNode *node) {
   std::string word;
   if (readLiteralAndUpdate(word)) {
     DEBUG_MSG("");
-    createNodeAndAppendAsChild(node, SqlNode::NODE_TYPE_VALUE, word);
+    node->SetValue(word);
     return true;
   }
 
   if (readWord(word) && isInteger(word)) {
     DEBUG_MSG("");
     readWordAndUpdate(word);
-    createNodeAndAppendAsChild(node, SqlNode::NODE_TYPE_VALUE, word);
+    node->SetValue(word);
     return true;
   }
 
   return handleColumnName(createNodeAndAppendAsChild(
-      node, SqlNode::NODE_TYPE_OPERAND, "column-name"));
+      node, SqlNode::NODE_TYPE_COLUMN_NAME));
 }
 
 bool SqlParser::handleColumnName(SqlNode *node) {
@@ -657,7 +630,7 @@ bool SqlParser::handleColumnName(SqlNode *node) {
   if (readWord(word) &&
       input_query_[current_query_position_ + word.length()] == '.') {
     if (!handleTableName(createNodeAndAppendAsChild(
-        node, SqlNode::NODE_TYPE_OPERAND, "table-name"))) {
+        node, SqlNode::NODE_TYPE_TABLE_NAME))) {
       DEBUG_MSG("");
       return false;
     }
@@ -670,7 +643,7 @@ bool SqlParser::handleColumnName(SqlNode *node) {
   }
 
   return handleAttributeName(createNodeAndAppendAsChild(
-      node, SqlNode::NODE_TYPE_OPERAND, "attribute-name"));
+      node, SqlNode::NODE_TYPE_ATTRIBUTE_NAME));
 }
 
 bool SqlParser::handleTableName(SqlNode *node) {
@@ -681,7 +654,7 @@ bool SqlParser::handleTableName(SqlNode *node) {
   }
 
   if (std::regex_match(table_name, std::regex("^[a-z]([a-z0-9])*$"))) {
-    createNodeAndAppendAsChild(node, SqlNode::NODE_TYPE_VALUE, table_name);
+    node->SetValue(table_name);
     return true;
   }
 
@@ -690,8 +663,7 @@ bool SqlParser::handleTableName(SqlNode *node) {
 }
 
 bool SqlParser::handleAttributeName(SqlNode *node) {
-  if (!handleTableName(createNodeAndAppendAsChild(
-      node, SqlNode::NODE_TYPE_OPERAND, "table-name"))) {
+  if (!handleTableName(node)) {
     DEBUG_MSG("");
     return false;
   }
@@ -702,7 +674,18 @@ bool SqlParser::handleAttributeName(SqlNode *node) {
 bool SqlParser::handleCompOp(SqlNode *node) {
   std::string comp_op;
   if (readWordAndUpdate(comp_op) && isCompOp(comp_op)) {
-    createNodeAndAppendAsChild(node, SqlNode::NODE_TYPE_VALUE, comp_op);
+    node->SetValue(comp_op);
+    return true;
+  }
+
+  DEBUG_MSG("");
+  return false;
+}
+
+bool SqlParser::handleOperatorSign(SqlNode *node) {
+  std::string sign;
+  if (readWordAndUpdate(sign) && isOperatorSign(sign)) {
+    node->SetValue(sign);
     return true;
   }
 

@@ -23,7 +23,7 @@ class SqlParser {
   bool isEndOfStatement();
 
   SqlNode *createNodeAndAppendAsChild(SqlNode *node,
-      const SqlNode::NodeType type, const std::string& name);
+      const SqlNode::NodeType type, const std::string& name = "");
 
   bool handleStatement(SqlNode *node);
   bool handleCreateTableStatement(SqlNode *node);
@@ -49,6 +49,7 @@ class SqlParser {
   bool handleTableName(SqlNode *node);
   bool handleAttributeName(SqlNode *node);
   bool handleCompOp(SqlNode *node);
+  bool handleOperatorSign(SqlNode *node);
 
   std::string input_query_;
   int current_query_position_;

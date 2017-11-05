@@ -28,7 +28,7 @@ void QueryManager::SetQuery(std::string query, SqlErrors::Type &error_code) {
 void QueryManager::ExecuteQuery(SqlErrors::Type &error_code) {
   parser_->SetQuery(sql_query_);
 
-  SqlNode *sql_node = new SqlNode(SqlNode::NODE_TYPE_OPERAND, "Statement");
+  SqlNode *sql_node = new SqlNode(SqlNode::NODE_TYPE_STATEMENT);
   parser_->Parse(sql_node, error_code);
   if (error_code != SqlErrors::NO_ERROR) {
     DEBUG_MSG(__FILE__ << ":" << __LINE__);
