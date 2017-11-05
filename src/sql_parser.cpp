@@ -624,6 +624,8 @@ bool SqlParser::handleExpression(SqlNode *node) {
       DEBUG_MSG("");
       return false;
     }
+
+    return true;
   }
 
   return handleTerm(createNodeAndAppendAsChild(
@@ -688,12 +690,19 @@ bool SqlParser::handleTableName(SqlNode *node) {
 }
 
 bool SqlParser::handleAttributeName(SqlNode *node) {
-  return handleTableName(node);
+  if (!handleTableName(createNodeAndAppendAsChild(
+      node, SqlNode::NODE_TYPE_OPERAND, "table-name"))) {
+    DEBUG_MSG("");
+    return false;
+  }
+
+  return true;
 }
 
 bool SqlParser::handleCompOp(SqlNode *node) {
   std::string comp_op;
   if (readWordAndUpdate(comp_op) && isCompOp(comp_op)) {
+    createNodeAndAppendAsChild(node, SqlNode::NODE_TYPE_VALUE, comp_op);
     return true;
   }
 
