@@ -1,4 +1,4 @@
-VPATH = src src/base src/parser src/storage storage_manager
+VPATH = src src/base src/parser src/query_plan src/storage storage_manager
 INCLUDEDIR = src
 CFLAGS += -std=c++14 -I. -I$(INCLUDEDIR) -Wno-static-float-init -DDEBUG
 CC = g++
@@ -11,6 +11,7 @@ SOURCES = StorageManager.cpp \
 					sql_errors.cpp \
 					sql_node.cpp \
 					sql_parser.cpp \
+					statement.cpp \
 					storage_adapter.cpp \
 					tokenizer.cpp
 
