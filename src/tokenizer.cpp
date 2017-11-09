@@ -37,6 +37,8 @@ bool Tokenizer::ReadOneWord(const std::string& list, std::string& word,
     leading_spaces++;
   }
 
+  LOG_MSG("Word: " << word << ", separator: " << separator\
+      << ", leading_spaces: " << leading_spaces);
   return true;
 }
 
@@ -48,10 +50,10 @@ bool Tokenizer::ReadLiteral(const std::string& input, std::string& literal) {
       literal.push_back(input[it++]);
     }
 
-    DEBUG_MSG("Literal: " << literal);
+    LOG_MSG("Literal: " << literal);
     return true;
   }
 
-  DEBUG_MSG("");
+  LOG_MSG("");
   return false;
 }

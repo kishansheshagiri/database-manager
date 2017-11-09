@@ -10,4 +10,10 @@
 #define DEBUG_MSG(str) do { } while ( false )
 #endif
 
+#if defined(LOGGING)
+#define LOG_MSG(str) DEBUG_MSG(str)
+#else
+#define LOG_MSG(str) do { } while ( false )
+#endif
+
 #endif // SRC_DEBUG_H
