@@ -32,7 +32,7 @@ bool StorageAdapter::Initialize() {
 bool StorageAdapter::CreateRelation(const std::string& name,
     const std::vector<std::string>& fields,
     const std::vector<enum FIELD_TYPE>& field_types,
-    Relation *relation) {
+    Relation *relation) const {
   if (name.empty()) {
     DEBUG_MSG("Empty relation name");
     return false;
