@@ -393,7 +393,7 @@ bool SqlParser::handleDataType(SqlNode *node) {
     return false;
   }
 
-  node->SetValue(data_type);
+  node->SetData(data_type);
   return true;
 }
 
@@ -496,13 +496,13 @@ bool SqlParser::handleValue(SqlNode *node) {
   if (readWord(word) && (!word.compare("NULL") || isInteger(word))) {
     DEBUG_MSG("");
     consumeWord(word);
-    node->SetValue(word);
+    node->SetData(word);
     return true;
   }
 
   if (consumeLiteral(word)) {
     DEBUG_MSG("");
-    node->SetValue(word);
+    node->SetData(word);
     return true;
   }
 
@@ -512,7 +512,7 @@ bool SqlParser::handleValue(SqlNode *node) {
 
 bool SqlParser::handleValueList(SqlNode *node) {
   if (!handleValue(createNodeAndAppendAsChild(
-      node, SqlNode::NODE_TYPE_VALUE_LIST))) {
+      node, SqlNode::NODE_TYPE_VALUE))) {
     DEBUG_MSG("");
     return false;
   }
@@ -537,7 +537,7 @@ bool SqlParser::handleSearchCondition(SqlNode *node) {
   std::string word;
   if (readWord(word) && !word.compare("OR")) {
     consumeWord(word);
-    node->SetValue(word);
+    node->SetData(word);
     return handleSearchCondition(node);
   }
 
@@ -555,7 +555,7 @@ bool SqlParser::handleBooleanTerm(SqlNode *node) {
   std::string word;
   if (readWord(word) && !word.compare("AND")) {
     consumeWord(word);
-    node->SetValue(word);
+    node->SetData(word);
     return handleBooleanTerm(node);
   }
 
@@ -616,14 +616,14 @@ bool SqlParser::handleTerm(SqlNode *node) {
   std::string word;
   if (consumeLiteral(word)) {
     DEBUG_MSG("");
-    node->SetValue(word);
+    node->SetData(word);
     return true;
   }
 
   if (readWord(word) && isInteger(word)) {
     DEBUG_MSG("");
     consumeWord(word);
-    node->SetValue(word);
+    node->SetData(word);
     return true;
   }
 
@@ -661,7 +661,7 @@ bool SqlParser::handleTableName(SqlNode *node) {
   }
 
   if (isTableName(table_name)) {
-    node->SetValue(table_name);
+    node->SetData(table_name);
     return true;
   }
 
@@ -681,7 +681,7 @@ bool SqlParser::handleAttributeName(SqlNode *node) {
 bool SqlParser::handleCompOp(SqlNode *node) {
   std::string comp_op;
   if (consumeWord(comp_op) && isCompOp(comp_op)) {
-    node->SetValue(comp_op);
+    node->SetData(comp_op);
     return true;
   }
 
@@ -692,7 +692,7 @@ bool SqlParser::handleCompOp(SqlNode *node) {
 bool SqlParser::handleOperatorSign(SqlNode *node) {
   std::string sign;
   if (consumeWord(sign) && isOperatorSign(sign)) {
-    node->SetValue(sign);
+    node->SetData(sign);
     return true;
   }
 

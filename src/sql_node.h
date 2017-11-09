@@ -4,6 +4,8 @@
 #include <string>
 #include <vector>
 
+#include "storage_manager_headers.h"
+
 class SqlNode {
  public:
   enum NodeType {
@@ -28,6 +30,7 @@ class SqlNode {
     NODE_TYPE_ATTRIBUTE_LIST,
     NODE_TYPE_INSERT_TUPLES,
     NODE_TYPE_VALUE_LIST,
+    NODE_TYPE_VALUE,
 
     NODE_TYPE_SEARCH_CONDITION,
     NODE_TYPE_BOOLEAN_TERM,
@@ -36,23 +39,36 @@ class SqlNode {
     NODE_TYPE_TERM
   };
 
-  SqlNode(NodeType type, std::string value = "");
+  SqlNode(NodeType type, std::string data = "");
   virtual ~SqlNode();
 
   void AppendChild(SqlNode* child);
   void RemoveChild(SqlNode* child);
-  SqlNode *Child(int index);
+  SqlNode *Child(int index) const;
   void RemoveAllChildren();
-  std::vector<SqlNode *> Children();
+  std::vector<SqlNode *> Children() const;
 
-  NodeType Type();
+  NodeType Type() const;
   void SetType(NodeType type);
-  std::string Value();
-  void SetValue(const std::string value);
+  std::string Data() const;
+  void SetData(const std::string data);
+
+  bool TableName(std::string& table_name) const;
+  bool AttributeName(std::string& name) const;
+  bool Datatype(FIELD_TYPE& type) const;
+  bool AttributeTypeList(std::vector<std::string>& attribute_names,
+      std::vector<FIELD_TYPE>& attribute_types) const;
+  bool SelectList(std::vector<std::string>& select_list) const;
+  bool ColumnName(std::string& column_name) const;
+  bool TableList(std::vector<std::string>& table_list) const;
+  bool AttributeList(std::vector<std::string>& attribute_list) const;
+  bool Value(std::string& value) const;
+  bool ValueList(std::vector<std::string>& value_list) const;
+  bool InsertTuples(std::vector<std::string>& tuples) const;
 
  private:
   NodeType type_;
-  std::string value_;
+  std::string data_;
   std::vector<SqlNode *> children_;
 };
 
