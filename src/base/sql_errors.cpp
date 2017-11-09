@@ -1,4 +1,4 @@
-#include "sql_errors.h"
+#include "base/sql_errors.h"
 
 std::ostream &operator <<(std::ostream &out, const SqlErrors::Type type) {
   switch (type) {

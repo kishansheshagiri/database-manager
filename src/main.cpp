@@ -2,9 +2,9 @@
 #include <sstream>
 #include <string>
 
-#include "debug.h"
+#include "base/debug.h"
+#include "base/sql_errors.h"
 #include "query_manager.h"
-#include "sql_errors.h"
 
 int main(int argc, char *argv[]) {
   // Start query Manager

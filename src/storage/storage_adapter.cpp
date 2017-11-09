@@ -1,6 +1,6 @@
 #include "storage_adapter.h"
 
-#include "debug.h"
+#include "base/debug.h"
 
 StorageAdapter *StorageAdapter::storage_adapter_ = nullptr;
 

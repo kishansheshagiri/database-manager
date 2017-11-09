@@ -2,7 +2,7 @@
 
 #include <regex>
 
-#include "debug.h"
+#include "base/debug.h"
 
 void SqlParser::SetQuery(std::string query) {
   input_query_ = query;

@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 
-#include "sql_errors.h"
+#include "base/sql_errors.h"
 
 class Tokenizer {
  public:

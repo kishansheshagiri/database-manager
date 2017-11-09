@@ -4,8 +4,8 @@
 #include <memory>
 #include <string>
 
-#include "sql_errors.h"
-#include "sql_parser.h"
+#include "base/sql_errors.h"
+#include "parser/sql_parser.h"
 
 class QueryManager {
  public:

@@ -1,5 +1,6 @@
-VPATH = src storage_manager
-CFLAGS += -std=c++14 -I. -Wno-static-float-init -DDEBUG
+VPATH = src src/base src/parser src/storage storage_manager
+INCLUDEDIR = src
+CFLAGS += -std=c++14 -I. -I$(INCLUDEDIR) -Wno-static-float-init -DDEBUG
 CC = g++
 TARGET = database-manager
 OBJDIR = obj

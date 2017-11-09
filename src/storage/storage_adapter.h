@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 
-#include "storage_manager_headers.h"
+#include "storage/storage_manager_headers.h"
 
 class StorageAdapter {
  public:

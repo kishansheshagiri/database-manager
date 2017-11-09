@@ -1,7 +1,7 @@
 #include "tokenizer.h"
 
-#include "debug.h"
-#include "sql_errors.h"
+#include "base/debug.h"
+#include "base/sql_errors.h"
 
 const std::string symbol_list = " ,.()<>=+-*";
 

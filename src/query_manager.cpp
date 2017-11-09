@@ -1,7 +1,7 @@
 #include "query_manager.h"
 
-#include "debug.h"
-#include "sql_node.h"
+#include "base/debug.h"
+#include "parser/sql_node.h"
 
 QueryManager *QueryManager::manager_ = nullptr;
 
