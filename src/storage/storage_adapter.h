@@ -12,14 +12,27 @@ class StorageAdapter {
   static StorageAdapter *Get();
 
   bool Initialize();
-
   bool CreateRelation(const std::string& name,
                       const std::vector<std::string>& fields,
                       const std::vector<enum FIELD_TYPE>& field_types,
                       Relation *relation) const;
+  bool DeleteRelation(const std::string& name) const;
+  bool CreateTuple() const;
+  template <typename Value> bool CreateTupleAndAppend(Relation* relation,
+      const std::vector<Value>& values) const;
+  template <typename Value> bool CreateTupleAndAppend(Relation* relation,
+      const std::vector<std::string>& field_names,
+      const std::vector<Value>& values) const;
+
  private:
   StorageAdapter();
-  virtual ~StorageAdapter();
+  ~StorageAdapter();
+
+  void reset();
+  void appendTupleToRelation(Relation* relation, Tuple& tuple) const;
+
+  // Memory manager
+  int available_memory_index_;
 
   Disk *disk_;
   MainMemory *main_memory_;
