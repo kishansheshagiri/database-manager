@@ -20,12 +20,19 @@ StorageAdapter::StorageAdapter()
 }
 
 StorageAdapter::~StorageAdapter() {
+  DEBUG_MSG("Real elapse time = " << \
+      ((double) (clock() - disk_start_time_) / CLOCKS_PER_SEC * 1000) << " ms");
+  DEBUG_MSG("Calculated elapse time = " << disk_->getDiskTimer() << " ms");
+  DEBUG_MSG("Calculated Disk I/Os = " << disk_->getDiskIOs());
+
   reset();
 }
 
 bool StorageAdapter::Initialize() {
   disk_->resetDiskIOs();
   disk_->resetDiskTimer();
+
+  disk_start_time_ = clock();
 
   return true;
 }

@@ -1,6 +1,7 @@
 #ifndef SRC_STORAGE_ADAPTER_H
 #define SRC_STORAGE_ADAPTER_H
 
+#include <ctime>
 #include <string>
 #include <vector>
 
@@ -35,6 +36,8 @@ class StorageAdapter {
 
   // Memory manager
   int available_memory_index_;
+
+  clock_t disk_start_time_;
 
   Disk *disk_;
   MainMemory *main_memory_;
