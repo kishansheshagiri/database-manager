@@ -14,13 +14,14 @@ class StorageAdapter {
   bool Initialize();
   bool CreateRelation(const std::string& name,
                       const std::vector<std::string>& fields,
-                      const std::vector<enum FIELD_TYPE>& field_types,
-                      Relation *relation) const;
+                      const std::vector<enum FIELD_TYPE>& field_types) const;
   bool DeleteRelation(const std::string& name) const;
   bool CreateTuple() const;
-  template <typename Value> bool CreateTupleAndAppend(Relation* relation,
+  template <typename Value> bool CreateTupleAndAppend(
+      const std::string& relation_name,
       const std::vector<Value>& values) const;
-  template <typename Value> bool CreateTupleAndAppend(Relation* relation,
+  template <typename Value> bool CreateTupleAndAppend(
+      const std::string& relation_name,
       const std::vector<std::string>& field_names,
       const std::vector<Value>& values) const;
 

@@ -32,8 +32,7 @@ bool StorageAdapter::Initialize() {
 
 bool StorageAdapter::CreateRelation(const std::string& name,
     const std::vector<std::string>& fields,
-    const std::vector<enum FIELD_TYPE>& field_types,
-    Relation *relation) const {
+    const std::vector<enum FIELD_TYPE>& field_types) const {
   if (name.empty()) {
     DEBUG_MSG("Empty relation name");
     return false;
@@ -45,18 +44,31 @@ bool StorageAdapter::CreateRelation(const std::string& name,
   }
 
   Schema schema(fields, field_types);
-  relation = schema_manager_->createRelation(name, schema);
+  Relation *relation = schema_manager_->createRelation(name, schema);
+  if (relation == nullptr) {
+    DEBUG_MSG("Unable to create relation");
+    return false;
+  }
+
   return true;
 }
 
 bool StorageAdapter::DeleteRelation(const std::string& name) const {
+  Relation *relation = schema_manager_->getRelation(name);
+  if (relation == nullptr) {
+    DEBUG_MSG("Invalid relation name");
+    return false;
+  }
+
+  relation->deleteBlocks(0);
   return schema_manager_->deleteRelation(name);
 }
 
 template <typename Value> bool StorageAdapter::CreateTupleAndAppend(
-    Relation* relation, const std::vector<Value>& values) const {
+    const std::string& relation_name, const std::vector<Value>& values) const {
+  Relation *relation = schema_manager_->getRelation(relation_name);
   if (relation == nullptr) {
-    DEBUG_MSG("Relation is null");
+    DEBUG_MSG("Invalid relation name");
     return false;
   }
 
@@ -81,10 +93,12 @@ template <typename Value> bool StorageAdapter::CreateTupleAndAppend(
 }
 
 template <typename Value> bool StorageAdapter::CreateTupleAndAppend(
-    Relation* relation, const std::vector<std::string>& field_names,
+    const std::string& relation_name,
+    const std::vector<std::string>& field_names,
     const std::vector<Value>& values) const {
+  Relation *relation = schema_manager_->getRelation(relation_name);
   if (relation == nullptr) {
-    DEBUG_MSG("Relation is null");
+    DEBUG_MSG("Invalid relation name");
     return false;
   }
 
