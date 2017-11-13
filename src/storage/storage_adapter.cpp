@@ -54,13 +54,7 @@ bool StorageAdapter::CreateRelation(const std::string& name,
 }
 
 bool StorageAdapter::DeleteRelation(const std::string& name) const {
-  Relation *relation = schema_manager_->getRelation(name);
-  if (relation == nullptr) {
-    DEBUG_MSG("Invalid relation name");
-    return false;
-  }
-
-  relation->deleteBlocks(0);
+  DeleteAllTuples(name);
   return schema_manager_->deleteRelation(name);
 }
 
@@ -119,6 +113,17 @@ template <typename Value> bool StorageAdapter::CreateTupleAndAppend(
   }
 
   appendTupleToRelation(relation, tuple);
+  return true;
+}
+
+bool StorageAdapter::DeleteAllTuples(const std::string& relation_name) const {
+  Relation *relation = schema_manager_->getRelation(relation_name);
+  if (relation == nullptr) {
+    DEBUG_MSG("Invalid relation name");
+    return false;
+  }
+
+  relation->deleteBlocks(0);
   return true;
 }
 

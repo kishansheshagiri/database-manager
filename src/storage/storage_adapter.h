@@ -24,6 +24,7 @@ class StorageAdapter {
       const std::string& relation_name,
       const std::vector<std::string>& field_names,
       const std::vector<Value>& values) const;
+  bool DeleteAllTuples(const std::string& relation_name) const;
 
  private:
   StorageAdapter();
