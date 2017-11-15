@@ -1,4 +1,4 @@
-#include "storage/where_clause_helper.h"
+#include "lqp/where_clause_helper.h"
 
 #include "base/debug.h"
 
@@ -25,7 +25,20 @@ bool WhereClauseHelper::Initialize(const SqlNode *where_node,
   where_node_ = where_node;
   table_name_ = table_name;
   client_ = client;
+
   return isValidSearchCondition();
+}
+
+bool WhereClauseHelper::Evaluate(Tuple *tuple,
+    SqlErrors::Type& error_code) {
+  if (tuple == nullptr) {
+    error_code = SqlErrors::UNKNOWN_ERROR;
+    DEBUG_MSG("Invalid tuple");
+    return false;
+  }
+
+  current_tuple_ = tuple;
+  return handleSearchCondition();
 }
 
 // Private methods
@@ -69,6 +82,12 @@ bool WhereClauseHelper::isValidBooleanFactor(
     return false;
   }
 
+  std::string comp_op = boolean_factor->Data();
+  if (comp_op != "<" && comp_op != ">" && comp_op != "=") {
+    DEBUG_MSG("Invalid comparison operator");
+    return false;
+  }
+
   for (auto expression : children) {
     if (!isValidExpression(boolean_factor)) {
       return false;
@@ -85,13 +104,19 @@ bool WhereClauseHelper::isValidExpression(const SqlNode *expression) const {
     return false;
   }
 
-  if (expression->Data().empty()) {
+  std::string data_operator = expression->Data();
+  if (data_operator.empty()) {
     if (children.size() != 1) {
       DEBUG_MSG("Expression should have only 1 child node");
       return false;
     }
 
     return isValidTerm(children[0]);
+  }
+
+  if (data_operator != "+" && data_operator != "-" && data_operator != "*") {
+    DEBUG_MSG("Invalid operator in expression");
+    return false;
   }
 
   for (auto term : children) {
@@ -106,11 +131,6 @@ bool WhereClauseHelper::isValidExpression(const SqlNode *expression) const {
 bool WhereClauseHelper::isValidTerm(const SqlNode *term) const {
   std::vector<SqlNode *> children = term->Children();
   if (children.size() == 0) {
-    if (term->Data().empty()) {
-      DEBUG_MSG("Term must have data for comparison");
-      return false;
-    }
-
     return true;
   }
 
@@ -144,4 +164,76 @@ bool WhereClauseHelper::isValidColumnName(const SqlNode *column_name) const {
   }
 
   return client_->IsValidColumnName(table_name, attribute_name);
+}
+
+bool WhereClauseHelper::handleSearchCondition() const {
+  std::vector<SqlNode *> children = where_node_->Children();
+  bool search_predicate = handleBooleanTerm(children[0]);
+  for (int index = 1; index < children.size(); index++) {
+    search_predicate = search_predicate || handleBooleanTerm(children[index]);
+  }
+
+  return search_predicate;
+}
+
+bool WhereClauseHelper::handleBooleanTerm(const SqlNode *boolean_term) const {
+  std::vector<SqlNode *> children = boolean_term->Children();
+  bool boolean_term_predicate = handleBooleanFactor(children[0]);
+  for (int index = 1; index < children.size(); index++) {
+    boolean_term_predicate = boolean_term_predicate &&
+        handleBooleanFactor(children[index]);
+  }
+
+  return boolean_term_predicate;
+}
+
+bool WhereClauseHelper::handleBooleanFactor(
+    const SqlNode *boolean_factor) const {
+  std::string expression_left = handleExpression(boolean_factor->Child(0));
+  std::string expression_right = handleExpression(boolean_factor->Child(1));
+
+  std::string comp_op = boolean_factor->Data();
+  if (comp_op == "<") {
+    return expression_left < expression_right;
+  } else if (comp_op == ">") {
+    return expression_left > expression_right;
+  } else {
+    return expression_left == expression_right;
+  }
+}
+
+std::string WhereClauseHelper::handleExpression(SqlNode *expression) const {
+  std::vector<SqlNode *> children = expression->Children();
+  std::string term_left = handleTerm(children[0]);
+  if (children.size() == 1) {
+    LOG_MSG("Simple expression");
+    return term_left;
+  }
+
+  std::string term_right = handleTerm(children[1]);
+  std::string data_operator = expression->Data();
+
+  long long result;
+  if (data_operator == "+") {
+    result = std::stol(term_left) + std::stol(term_right);
+  } else if (data_operator == "-") {
+    result = std::stol(term_left) - std::stol(term_right);
+  } else {
+    result = std::stol(term_left) * std::stol(term_right);
+  }
+
+  return std::to_string(result);
+}
+
+std::string WhereClauseHelper::handleTerm(SqlNode *term) const {
+  std::vector<SqlNode *> children = term->Children();
+  if (children.size() == 0) {
+    return term->Data();
+  }
+
+  return handleColumnName(children[0]);
+}
+
+std::string WhereClauseHelper::handleColumnName(SqlNode *column_name) const {
+  return std::string();
 }

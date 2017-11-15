@@ -1,6 +1,40 @@
 #include "storage_adapter.h"
 
+#include <regex>
+
 #include "base/debug.h"
+
+bool inline IsInteger(const std::string integer) {
+  return std::regex_match(integer, std::regex("^[0-9]+$"));
+}
+
+bool inline MatchFieldType(const Schema schema, const int offset,
+    const std::string value) {
+  std::string field_name = schema.getFieldName(offset);
+  FIELD_TYPE field_type = schema.getFieldType(offset);
+
+  if (field_type == INT) {
+    if (!IsInteger(value)) {
+      ERROR_MSG("Invalid integer value for attribute: " << field_name);
+      return false;
+    }
+  } else if (field_type == STR20) {
+    if (value.length() > 20) {
+      ERROR_MSG("Length mismatch for value of attribtue: " << field_name);
+    }
+  } else {
+    ERROR_MSG("Invalid field name");
+    return false;
+  }
+
+  return true;
+}
+
+bool inline MatchFieldType(const Schema schema,
+    const std::string field_name, const std::string value) {
+
+  return MatchFieldType(schema, schema.getFieldOffset(field_name), value);
+}
 
 StorageAdapter *StorageAdapter::storage_adapter_ = nullptr;
 
@@ -65,15 +99,16 @@ bool StorageAdapter::DeleteRelation(const std::string& name) const {
   return schema_manager_->deleteRelation(name);
 }
 
-template <typename Value> bool StorageAdapter::CreateTupleAndAppend(
-    const std::string& relation_name, const std::vector<Value>& values) const {
+bool StorageAdapter::CreateTupleAndAppend(const std::string& relation_name,
+    const std::vector<std::string>& values) const {
   Relation *relation = schema_manager_->getRelation(relation_name);
   if (relation == nullptr) {
     DEBUG_MSG("Invalid relation name");
     return false;
   }
 
-  if (values.size() == 0) {
+  Schema schema = relation->getSchema();
+  if (values.size() != schema.getNumOfFields()) {
     DEBUG_MSG("Inserted list of values is empty");
     return false;
   }
@@ -81,7 +116,15 @@ template <typename Value> bool StorageAdapter::CreateTupleAndAppend(
   int offset = 0;
   Tuple tuple = relation->createTuple();
   for (auto value : values) {
-    if (offset == tuple.getNumOfFields() || !tuple.setField(offset, value)) {
+    if (!MatchFieldType(schema, offset, values[offset])) {
+      return false;
+    }
+
+    if (schema.getFieldType(offset) == INT &&
+        !tuple.setField(offset, std::stoi(values[offset]))) {
+      DEBUG_MSG("Invalid values for relation");
+      return false;
+    } else if (!tuple.setField(offset, values[offset])) {
       DEBUG_MSG("Invalid values for relation");
       return false;
     }
@@ -93,17 +136,18 @@ template <typename Value> bool StorageAdapter::CreateTupleAndAppend(
   return true;
 }
 
-template <typename Value> bool StorageAdapter::CreateTupleAndAppend(
-    const std::string& relation_name,
+bool StorageAdapter::CreateTupleAndAppend(const std::string& relation_name,
     const std::vector<std::string>& field_names,
-    const std::vector<Value>& values) const {
+    const std::vector<std::string>& values) const {
   Relation *relation = schema_manager_->getRelation(relation_name);
   if (relation == nullptr) {
     DEBUG_MSG("Invalid relation name");
     return false;
   }
 
-  if (field_names.size() == 0 || field_names.size() != values.size()) {
+  Schema schema = relation->getSchema();
+  if (field_names.size() != values.size() ||
+      field_names.size() != schema.getNumOfFields()) {
     DEBUG_MSG("Invalid fields for relation");
     return false;
   }
@@ -111,8 +155,16 @@ template <typename Value> bool StorageAdapter::CreateTupleAndAppend(
   int index = 0;
   Tuple tuple = relation->createTuple();
   for (auto field : field_names) {
-    if (!tuple.setField(field, values[index])) {
-      DEBUG_MSG("Invalid values for relation.");
+    if (!MatchFieldType(schema, field, values[index])) {
+      return false;
+    }
+
+    if (schema.getFieldType(field) == INT &&
+        !tuple.setField(field, std::stoi(values[index]))) {
+      DEBUG_MSG("Invalid values for relation");
+      return false;
+    } else if (schema.getFieldType(field) == STR20 &&
+        !tuple.setField(field, values[index])) {
       return false;
     }
 

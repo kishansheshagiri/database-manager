@@ -6,7 +6,7 @@
 #include <vector>
 
 #include "storage/storage_manager_headers.h"
-#include "storage/where_clause_helper.h"
+#include "lqp/where_clause_helper.h"
 
 class StorageAdapter : public WhereClauseHelperClient {
  public:
@@ -19,13 +19,11 @@ class StorageAdapter : public WhereClauseHelperClient {
                       const std::vector<enum FIELD_TYPE>& field_types) const;
   bool DeleteRelation(const std::string& name) const;
   bool CreateTuple() const;
-  template <typename Value> bool CreateTupleAndAppend(
-      const std::string& relation_name,
-      const std::vector<Value>& values) const;
-  template <typename Value> bool CreateTupleAndAppend(
-      const std::string& relation_name,
+  bool CreateTupleAndAppend(const std::string& relation_name,
+      const std::vector<std::string>& values) const;
+  bool CreateTupleAndAppend(const std::string& relation_name,
       const std::vector<std::string>& field_names,
-      const std::vector<Value>& values) const;
+      const std::vector<std::string>& values) const;
   bool DeleteAllTuples(const std::string& relation_name) const;
 
   // WhereClauseHelper methods

@@ -18,7 +18,10 @@ std::ostream &operator <<(std::ostream &out, const SqlErrors::Type type) {
       out << "Contains invalid charater/s";
       break;
     case SqlErrors::INVALID_COLUMN_NAME:
-      out << "Table name contains invalid characters";
+      out << "Column name contains invalid characters";
+      break;
+    case SqlErrors::INVALID_TABLE_NAME:
+      out << "Invalid table name";
       break;
     case SqlErrors::INVALID_ATTRIBUTES:
       out << "Attribute list is invalid";

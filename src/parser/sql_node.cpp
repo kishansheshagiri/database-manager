@@ -29,12 +29,12 @@ void SqlNode::RemoveChild(SqlNode* child) {
 }
 
 SqlNode *SqlNode::Child(int index) const {
-  if (index <= 0 || children_.size() < index) {
+  if (index < 0 || index >= children_.size()) {
     DEBUG_MSG("Invalid index");
     return nullptr;
   }
 
-  return children_[index - 1];
+  return children_[index];
 }
 
 void SqlNode::RemoveAllChildren() {
@@ -198,6 +198,7 @@ bool SqlNode::AttributeList(std::vector<std::string>& attribute_list) const {
       DEBUG_MSG("");
       return false;
     }
+
     attribute_list.push_back(attribute_name);
   }
 
@@ -239,7 +240,7 @@ bool SqlNode::InsertTuples(std::vector<std::string>& tuples) const {
   }
 
   if (children_[0]->Type() == NODE_TYPE_VALUE_LIST) {
-    return ValueList(tuples);
+    return children_[0]->ValueList(tuples);
   }
 
   DEBUG_MSG("");
