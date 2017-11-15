@@ -13,7 +13,8 @@ SOURCES = StorageManager.cpp \
 					sql_parser.cpp \
 					statement.cpp \
 					storage_adapter.cpp \
-					tokenizer.cpp
+					tokenizer.cpp \
+					where_clause_helper.cpp
 
 OBJECTS := $(patsubst %.cpp, %.o, $(SOURCES))
 

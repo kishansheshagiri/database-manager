@@ -6,8 +6,9 @@
 #include <vector>
 
 #include "storage/storage_manager_headers.h"
+#include "storage/where_clause_helper.h"
 
-class StorageAdapter {
+class StorageAdapter : public WhereClauseHelperClient {
  public:
   // Singleton method
   static StorageAdapter *Get();
@@ -26,6 +27,10 @@ class StorageAdapter {
       const std::vector<std::string>& field_names,
       const std::vector<Value>& values) const;
   bool DeleteAllTuples(const std::string& relation_name) const;
+
+  // WhereClauseHelper methods
+  virtual bool IsValidColumnName(const std::string& table_name,
+      const std::string& attribute_name) const override;
 
  private:
   StorageAdapter();

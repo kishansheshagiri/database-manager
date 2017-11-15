@@ -134,6 +134,25 @@ bool StorageAdapter::DeleteAllTuples(const std::string& relation_name) const {
   return true;
 }
 
+// WhereClauseHelperClient
+bool StorageAdapter::IsValidColumnName(const std::string& table_name,
+    const std::string& attribute_name) const {
+  Relation *relation = schema_manager_->getRelation(table_name);
+  if (relation == nullptr) {
+    ERROR_MSG("Invalid table name: " << table_name);
+    return false;
+  }
+
+  Schema schema = relation->getSchema();
+  if (!schema.fieldNameExists(attribute_name)) {
+    ERROR_MSG("Invalid attribute name '" << attribute_name << \
+        "' for table '" << table_name << "'");
+    return false;
+  }
+
+  return true;
+}
+
 // Private methods
 void StorageAdapter::reset() {
   available_memory_index_ = 0;
