@@ -9,7 +9,7 @@ using namespace std;
  *        and determine whether to access variable "str" or "integer" from the "union"
  */
 
-enum FIELD_TYPE { INT, STR20 };
+enum FIELD_TYPE { INT = 1, STR20 };
 
 union Field {
 public:
