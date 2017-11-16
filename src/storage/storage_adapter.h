@@ -5,10 +5,10 @@
 #include <string>
 #include <vector>
 
+#include "parser/where_clause_helper.h"
 #include "storage/storage_manager_headers.h"
-#include "lqp/where_clause_helper.h"
 
-class StorageAdapter : public WhereClauseHelperClient {
+class StorageAdapter {
  public:
   // Singleton method
   static StorageAdapter *Get();
@@ -25,10 +25,11 @@ class StorageAdapter : public WhereClauseHelperClient {
       const std::vector<std::string>& field_names,
       const std::vector<std::string>& values) const;
   bool DeleteAllTuples(const std::string& relation_name) const;
+  bool DeleteTuples(const std::string& relation_name,
+      const WhereClauseHelper where_clause_helper) const;
 
-  // WhereClauseHelper methods
-  virtual bool IsValidColumnName(const std::string& table_name,
-      const std::string& attribute_name) const override;
+  bool IsValidColumnName(const std::string& table_name,
+      const std::string& attribute_name) const;
 
  private:
   StorageAdapter();

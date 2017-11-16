@@ -1,7 +1,5 @@
 #include "parser/sql_node.h"
 
-#include <algorithm>
-
 #include "base/debug.h"
 
 SqlNode::SqlNode(NodeType type, std::string data)
@@ -245,4 +243,125 @@ bool SqlNode::InsertTuples(std::vector<std::string>& tuples) const {
 
   DEBUG_MSG("");
   return false;
+}
+
+bool SqlNode::ValidateSearchCondition() const {
+  if (type_ != NODE_TYPE_SEARCH_CONDITION || children_.size() <= 0) {
+    DEBUG_MSG("");
+    return false;
+  }
+
+  for (auto boolean_term : children_) {
+    if (!boolean_term->isValidBooleanTerm()) {
+      DEBUG_MSG("");
+      return false;
+    }
+  }
+
+  return true;
+}
+
+bool SqlNode::isValidBooleanTerm() const {
+  if (type_ != NODE_TYPE_BOOLEAN_TERM || children_.size() <= 0) {
+    DEBUG_MSG("");
+    return false;
+  }
+
+  for (auto boolean_factor : children_) {
+    if (!boolean_factor->isValidBooleanFactor()) {
+      DEBUG_MSG("");
+      return false;
+    }
+  }
+
+  return true;
+}
+
+bool SqlNode::isValidBooleanFactor() const {
+  if (type_ != NODE_TYPE_BOOLEAN_FACTOR || children_.size() != 2) {
+    DEBUG_MSG("");
+    return false;
+  }
+
+  if (data_ != "<" && data_ != ">" && data_ != "=") {
+    DEBUG_MSG("Invalid comparison operator");
+    return false;
+  }
+
+  for (auto expression : children_) {
+    if (!expression->isValidExpression()) {
+      DEBUG_MSG("");
+      return false;
+    }
+  }
+
+  return true;
+}
+
+bool SqlNode::isValidExpression() const {
+  if (type_ != NODE_TYPE_EXPRESSION || children_.size() > 2) {
+    DEBUG_MSG("");
+    return false;
+  }
+
+  if (data_.empty()) {
+    if (children_.size() != 1) {
+      DEBUG_MSG("Expression should have exactly one child node");
+      return false;
+    }
+
+    return children_[0]->isValidTerm();
+  }
+
+  if (data_ != "+" && data_ != "-" && data_ != "*") {
+    DEBUG_MSG("Invalid operator in expression");
+    return false;
+  }
+
+  for (auto term : children_) {
+    if (!term->isValidTerm()) {
+      DEBUG_MSG("");
+      return false;
+    }
+  }
+
+  return true;
+}
+
+bool SqlNode::isValidTerm() const {
+  if (type_ != NODE_TYPE_TERM || children_.size() > 1) {
+    DEBUG_MSG("");
+    return false;
+  }
+
+  if (data_.empty()) {
+    return children_[0]->isValidColumnName();
+  }
+
+  return true;
+}
+
+bool SqlNode::isValidColumnName() const {
+  if (type_ != NODE_TYPE_COLUMN_NAME ||
+      (children_.size() != 1 && children_.size() != 2)) {
+    DEBUG_MSG("Column name has invalid number of children");
+    return false;
+  }
+
+  if (children_.size() == 1) {
+    return children_[0]->isValidAttributeName();
+  } else {
+    return children_[0]->isValidTableName() &&
+        children_[1]->isValidAttributeName();
+  }
+}
+
+bool SqlNode::isValidTableName() const {
+  return (type_ == NODE_TYPE_TABLE_NAME) &&
+      (children_.size() == 0) && !data_.empty();
+}
+
+bool SqlNode::isValidAttributeName() const {
+  return (type_ == NODE_TYPE_ATTRIBUTE_NAME) &&
+      (children_.size() == 0) && !data_.empty();
 }

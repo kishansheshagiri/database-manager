@@ -1,6 +1,7 @@
 #include "lqp/delete_statement.h"
 
 #include "base/debug.h"
+#include "parser/where_clause_helper.h"
 
 DeleteStatement::DeleteStatement(const SqlNode *root_node)
   : Statement(root_node) {
@@ -32,7 +33,18 @@ void DeleteStatement::Execute(SqlErrors::Type& error_code) {
     return;
   }
 
-  // TODO(Kishan): Implement WHERE clause.
+  if (!RootNode()->Child(1)->ValidateSearchCondition()) {
+    DEBUG_MSG("");
+    error_code = SqlErrors::INVALID_SEARCH_CONDITION;
+    return;
+  }
+
+  WhereClauseHelper helper;
+  if (!helper.Initialize(RootNode()->Child(1), table_name) ||
+      !Storage()->DeleteTuples(table_name, helper)) {
+    DEBUG_MSG("");
+    error_code = SqlErrors::INVALID_SEARCH_CONDITION;
+  }
 }
 
 bool DeleteStatement::SetTables(const std::vector<std::string> tables) {

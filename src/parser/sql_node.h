@@ -16,23 +16,23 @@ class SqlNode {
     NODE_TYPE_DELETE_STATEMENT,
     NODE_TYPE_INSERT_STATEMENT,
 
-    NODE_TYPE_TABLE_LIST,
+    NODE_TYPE_TABLE_LIST = 20,
     NODE_TYPE_TABLE_NAME,
 
-    NODE_TYPE_ATTRIBUTE_TYPE_LIST,
+    NODE_TYPE_ATTRIBUTE_TYPE_LIST = 30,
     NODE_TYPE_ATTRIBUTE_NAME,
     NODE_TYPE_DATA_TYPE,
 
-    NODE_TYPE_DISTINCT,
+    NODE_TYPE_DISTINCT = 40,
     NODE_TYPE_SELECT_LIST,
     NODE_TYPE_COLUMN_NAME,
 
-    NODE_TYPE_ATTRIBUTE_LIST,
+    NODE_TYPE_ATTRIBUTE_LIST = 50,
     NODE_TYPE_INSERT_TUPLES,
     NODE_TYPE_VALUE_LIST,
     NODE_TYPE_VALUE,
 
-    NODE_TYPE_SEARCH_CONDITION,
+    NODE_TYPE_SEARCH_CONDITION = 60,
     NODE_TYPE_BOOLEAN_TERM,
     NODE_TYPE_BOOLEAN_FACTOR,
     NODE_TYPE_EXPRESSION,
@@ -65,8 +65,17 @@ class SqlNode {
   bool Value(std::string& value) const;
   bool ValueList(std::vector<std::string>& value_list) const;
   bool InsertTuples(std::vector<std::string>& tuples) const;
+  bool ValidateSearchCondition() const;
 
  private:
+  bool isValidBooleanTerm() const;
+  bool isValidBooleanFactor() const;
+  bool isValidExpression() const;
+  bool isValidTerm() const;
+  bool isValidColumnName() const;
+  bool isValidTableName() const;
+  bool isValidAttributeName() const;
+
   NodeType type_;
   std::string data_;
   std::vector<SqlNode *> children_;

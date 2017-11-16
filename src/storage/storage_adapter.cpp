@@ -186,7 +186,12 @@ bool StorageAdapter::DeleteAllTuples(const std::string& relation_name) const {
   return true;
 }
 
-// WhereClauseHelperClient
+bool StorageAdapter::DeleteTuples(const std::string& relation_name,
+    const WhereClauseHelper where_clause_helper) const {
+  DEBUG_MSG("NOT IMPLEMENTED");
+  return false;
+}
+
 bool StorageAdapter::IsValidColumnName(const std::string& table_name,
     const std::string& attribute_name) const {
   Relation *relation = schema_manager_->getRelation(table_name);
