@@ -7,14 +7,19 @@
 #include "query_manager.h"
 
 int main(int argc, char *argv[]) {
+  logging::DisableConsoleLogs();
+
   // Start query Manager
   QueryManager *query_manager = QueryManager::Get();
 
   // Main run loop
   while (true) {
     std::string new_line;
+    std::cout.clear();
+
     std::cout << "TinySQL> ";
     std::getline(std::cin, new_line);
+    std::cout.setstate(std::ios_base::failbit);
 
     // Set Query
     SqlErrors::Type error_code = SqlErrors::NO_ERROR;
@@ -27,7 +32,7 @@ int main(int argc, char *argv[]) {
     // Start executing query
     query_manager->ExecuteQuery(error_code);
 
-    std::cout << error_code << std::endl << std::endl;
+    ERROR_MSG(error_code << std::endl);
   }
 
   delete query_manager;
