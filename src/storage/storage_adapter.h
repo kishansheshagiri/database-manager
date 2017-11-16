@@ -8,6 +8,8 @@
 #include "parser/where_clause_helper.h"
 #include "storage/storage_manager_headers.h"
 
+typedef std::vector<std::vector<std::string> > TupleList;
+
 class StorageAdapter {
  public:
   // Singleton method
@@ -18,7 +20,6 @@ class StorageAdapter {
                       const std::vector<std::string>& fields,
                       const std::vector<enum FIELD_TYPE>& field_types) const;
   bool DeleteRelation(const std::string& name) const;
-  bool CreateTuple() const;
   bool CreateTupleAndAppend(const std::string& relation_name,
       const std::vector<std::string>& values) const;
   bool CreateTupleAndAppend(const std::string& relation_name,
@@ -27,6 +28,11 @@ class StorageAdapter {
   bool DeleteAllTuples(const std::string& relation_name) const;
   bool DeleteTuples(const std::string& relation_name,
       const WhereClauseHelper where_clause_helper) const;
+
+  bool Tuples(const std::string relation_name,
+      TupleList& tuples_as_string) const;
+  void PrintTupleList(const std::string relation_name,
+      const TupleList tuples) const;
 
   bool IsValidColumnName(const std::string& table_name,
       const std::string& attribute_name) const;

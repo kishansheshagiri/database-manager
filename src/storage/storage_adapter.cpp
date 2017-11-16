@@ -1,5 +1,6 @@
 #include "storage_adapter.h"
 
+#include <iomanip>
 #include <regex>
 
 #include "base/debug.h"
@@ -190,6 +191,69 @@ bool StorageAdapter::DeleteTuples(const std::string& relation_name,
     const WhereClauseHelper where_clause_helper) const {
   DEBUG_MSG("NOT IMPLEMENTED");
   return false;
+}
+
+bool StorageAdapter::Tuples(const std::string relation_name,
+    TupleList& tuples_as_string) const {
+  Relation *relation = schema_manager_->getRelation(relation_name);
+
+  int block_count = relation->getNumOfBlocks();
+  int last_count = 0;
+
+  while (block_count > 0) {
+    int current_block_count = block_count > main_memory_->getMemorySize() ?
+        main_memory_->getMemorySize() : block_count;
+    if (!relation->getBlocks(last_count, 0, current_block_count)) {
+      DEBUG_MSG("");
+      return false;
+    }
+
+    std::vector<Tuple> tuples = main_memory_->getTuples(0, current_block_count);
+    for (auto tuple : tuples) {
+      std::vector<std::string> fields;
+      for (int index = 0; index < tuple.getNumOfFields(); index++) {
+        if (tuple.getSchema().getFieldType(index) == INT) {
+          fields.push_back(std::to_string(tuple.getField(index).integer));
+        } else if (tuple.getSchema().getFieldType(index) == STR20) {
+          fields.push_back(*(tuple.getField(index).str));
+        } else {
+          DEBUG_MSG("");
+          return false;
+        }
+      }
+
+      tuples_as_string.push_back(fields);
+    }
+
+    last_count += block_count;
+    block_count -= current_block_count;
+  }
+
+  return true;
+}
+
+void StorageAdapter::PrintTupleList(const std::string relation_name,
+    const TupleList tuples) const {
+  Relation *relation = schema_manager_->getRelation(relation_name);
+  if (relation == nullptr) {
+    DEBUG_MSG("Invalid table name: " << relation_name);
+    return;
+  }
+
+  std::vector<std::string> field_names = relation->getSchema().getFieldNames();
+  for (auto field_name : field_names) {
+    DEBUG_MSG_SINGLE_LINE(setw(19) << field_name);
+  }
+
+  DEBUG_MSG_SINGLE_LINE("\n");
+
+  for (auto tuple : tuples) {
+    for(auto field : tuple) {
+      DEBUG_MSG_SINGLE_LINE(setw(19) << field);
+    }
+
+    DEBUG_MSG_SINGLE_LINE("\n");
+  }
 }
 
 bool StorageAdapter::IsValidColumnName(const std::string& table_name,

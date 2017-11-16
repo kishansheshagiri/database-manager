@@ -10,8 +10,6 @@ InsertStatement::~InsertStatement() {
 }
 
 void InsertStatement::Execute(SqlErrors::Type& error_code) {
-  DEBUG_MSG("");
-
   if (RootNode() == nullptr ||
       RootNode()->Type() != SqlNode::NODE_TYPE_INSERT_STATEMENT) {
     DEBUG_MSG("");

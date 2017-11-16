@@ -16,8 +16,15 @@
       ": " << __LINE__ << ":\t " << str << std::endl; \
   std::cout.setstate(std::ios_base::failbit); \
 } while (false)
+
+#define DEBUG_MSG_SINGLE_LINE(str) do { \
+  std::cout.clear(); \
+  std::cout << str; \
+  std::cout.setstate(std::ios_base::failbit); \
+} while (false)
 #else
 #define DEBUG_MSG(str) do { } while (false)
+#define DEBUG_MSG_SINGLE_LINE(str) do { } while (false)
 #endif
 
 #if defined(LOGGING)
