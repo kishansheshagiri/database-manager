@@ -43,6 +43,7 @@ class StorageAdapter {
 
   void reset();
   void appendTupleToRelation(Relation* relation, Tuple& tuple) const;
+  void clearMainMemoryBlocks() const;
 
   // Memory manager
   int available_memory_index_;

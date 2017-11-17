@@ -39,7 +39,7 @@ void InsertStatement::Execute(SqlErrors::Type& error_code) {
   if (!Storage()->CreateTupleAndAppend(table_name,
       field_names_, values_)) {
     DEBUG_MSG("");
-    error_code = SqlErrors::TABLE_EXISTS;
+    error_code = SqlErrors::UNKNOWN_ERROR;
   }
 }
 

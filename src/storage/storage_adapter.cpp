@@ -225,8 +225,9 @@ bool StorageAdapter::Tuples(const std::string relation_name,
       tuples_as_string.push_back(fields);
     }
 
-    last_count += block_count;
+    last_count += current_block_count;
     block_count -= current_block_count;
+    clearMainMemoryBlocks();
   }
 
   return true;
@@ -241,19 +242,32 @@ void StorageAdapter::PrintTupleList(const std::string relation_name,
   }
 
   std::vector<std::string> field_names = relation->getSchema().getFieldNames();
+
+  DEBUG_MSG_SINGLE_LINE("\n");
+  DEBUG_MSG_SINGLE_LINE(
+      "+" << std::string(19 * field_names.size(), '-') << "+");
+  DEBUG_MSG_SINGLE_LINE("\n");
+
   for (auto field_name : field_names) {
-    DEBUG_MSG_SINGLE_LINE(setw(19) << field_name);
+    DEBUG_MSG_SINGLE_LINE("|" << setw(18) << std::left << field_name);
   }
 
+  DEBUG_MSG_SINGLE_LINE(" |\n");
+  DEBUG_MSG_SINGLE_LINE(
+      "+" << std::string(19 * field_names.size(), '-') << "+");
   DEBUG_MSG_SINGLE_LINE("\n");
 
   for (auto tuple : tuples) {
     for(auto field : tuple) {
-      DEBUG_MSG_SINGLE_LINE(setw(19) << field);
+      DEBUG_MSG_SINGLE_LINE("|" << setw(18) << std::left << field);
     }
 
-    DEBUG_MSG_SINGLE_LINE("\n");
+    DEBUG_MSG_SINGLE_LINE(" |\n");
   }
+
+  DEBUG_MSG_SINGLE_LINE(
+      "+" << std::string(19 * field_names.size(), '-') << "+");
+  DEBUG_MSG_SINGLE_LINE("\n");
 }
 
 bool StorageAdapter::IsValidColumnName(const std::string& table_name,
@@ -315,4 +329,11 @@ void StorageAdapter::appendTupleToRelation(Relation* relation,
   }
 
   block->clear();
+}
+
+void StorageAdapter::clearMainMemoryBlocks() const {
+  for (int index = 0; index < main_memory_->getMemorySize(); index++) {
+    Block *block = main_memory_->getBlock(index);
+    block->clear();
+  }
 }
