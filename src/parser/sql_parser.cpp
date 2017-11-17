@@ -85,7 +85,7 @@ bool SqlParser::consumeLiteral(std::string& literal) {
   consumeSpaceCharacters();
   if (tokenizer_.ReadLiteral(
       std::string(input_query_.substr(current_query_position_)), literal)) {
-    current_query_position_ += literal.length() + 2;
+    current_query_position_ += literal.length();
     return true;
   }
 

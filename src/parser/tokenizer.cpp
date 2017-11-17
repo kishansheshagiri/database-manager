@@ -45,10 +45,12 @@ bool Tokenizer::ReadOneWord(const std::string& list, std::string& word,
 bool Tokenizer::ReadLiteral(const std::string& input, std::string& literal) {
   literal.clear();
   if (input[0] == '\"') {
-    int it = 1;
-    while (input[it] != '\"' && it < input.length()) {
+    int it = 0;
+    do {
       literal.push_back(input[it++]);
-    }
+    } while (input[it] != '\"' && it < input.length());
+
+    literal.push_back('\"');
 
     LOG_MSG("Literal: " << literal);
     return true;
