@@ -23,6 +23,12 @@ std::ostream &operator <<(std::ostream &out, const SqlErrors::Type type) {
     case SqlErrors::INVALID_TABLE_NAME:
       out << "Invalid table name";
       break;
+    case SqlErrors::INVALID_TABLE_LIST:
+      out << "List of tables is invalid";
+      break;
+    case SqlErrors::INVALID_SELECT_LIST:
+      out << "List of selection attributes is invalid";
+      break;
     case SqlErrors::INVALID_ATTRIBUTES:
       out << "Attribute list is invalid";
       break;
