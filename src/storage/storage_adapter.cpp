@@ -6,7 +6,11 @@
 #include "base/debug.h"
 
 bool inline IsInteger(const std::string integer) {
-  return std::regex_match(integer, std::regex("^[0-9]+$"));
+  if (!std::regex_match(integer, std::regex("^[0-9]+$")) && integer != "NULL") {
+    return false;
+  }
+
+  return true;
 }
 
 bool inline MatchFieldType(const Schema schema, const int offset,
@@ -20,7 +24,7 @@ bool inline MatchFieldType(const Schema schema, const int offset,
       return false;
     }
   } else if (field_type == STR20) {
-    if (value.length() > 20) {
+    if (value.length() > 22) {
       ERROR_MSG("Length mismatch for value of attribtue: " << field_name);
     }
   } else {
@@ -160,10 +164,16 @@ bool StorageAdapter::CreateTupleAndAppend(const std::string& relation_name,
       return false;
     }
 
-    if (schema.getFieldType(field) == INT &&
-        !tuple.setField(field, std::stoi(values[index]))) {
-      DEBUG_MSG("Invalid values for relation");
-      return false;
+    if (schema.getFieldType(field) == INT) {
+      std::string integer_value = values[index];
+      if (values[index] == "NULL") {
+        integer_value = std::to_string(INT_MAX);
+      }
+
+      if (!tuple.setField(field, std::stoi(integer_value))) {
+        DEBUG_MSG("Invalid values for relation");
+        return false;
+      }
     } else if (schema.getFieldType(field) == STR20 &&
         !tuple.setField(field, values[index])) {
       return false;
@@ -213,7 +223,13 @@ bool StorageAdapter::Tuples(const std::string relation_name,
       std::vector<std::string> fields;
       for (int index = 0; index < tuple.getNumOfFields(); index++) {
         if (tuple.getSchema().getFieldType(index) == INT) {
-          fields.push_back(std::to_string(tuple.getField(index).integer));
+          int value = tuple.getField(index).integer;
+          std::string integer_value = std::to_string(value);
+          if (value == INT_MAX) {
+            integer_value = "NULL";
+          }
+
+          fields.push_back(integer_value);
         } else if (tuple.getSchema().getFieldType(index) == STR20) {
           fields.push_back(*(tuple.getField(index).str));
         } else {
@@ -258,7 +274,7 @@ void StorageAdapter::PrintTupleList(const std::string relation_name,
   DEBUG_MSG_SINGLE_LINE("\n");
 
   for (auto tuple : tuples) {
-    for(auto field : tuple) {
+    for (auto field : tuple) {
       DEBUG_MSG_SINGLE_LINE("|" << setw(18) << std::left << field);
     }
 
