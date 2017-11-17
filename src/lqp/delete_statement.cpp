@@ -1,7 +1,6 @@
 #include "lqp/delete_statement.h"
 
 #include "base/debug.h"
-#include "parser/where_clause_helper.h"
 
 DeleteStatement::DeleteStatement(const SqlNode *root_node)
   : Statement(root_node) {

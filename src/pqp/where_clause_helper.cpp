@@ -1,4 +1,4 @@
-#include "parser/where_clause_helper.h"
+#include "pqp/where_clause_helper.h"
 
 #include "base/debug.h"
 #include "storage/storage_adapter.h"
@@ -11,8 +11,7 @@ WhereClauseHelper::~WhereClauseHelper() {
 
 }
 
-bool WhereClauseHelper::Initialize(const SqlNode *where_node,
-    std::string table_name) {
+bool WhereClauseHelper::Initialize(SqlNode *where_node) {
   if (where_node == nullptr) {
     DEBUG_MSG("Empty values in intialization");
     return false;
@@ -24,25 +23,12 @@ bool WhereClauseHelper::Initialize(const SqlNode *where_node,
   }
 
   where_node_ = where_node;
-  table_name_ = table_name;
 
   return true;
 }
 
-bool WhereClauseHelper::Evaluate(Tuple *tuple,
-    SqlErrors::Type& error_code) {
-  if (tuple == nullptr) {
-    error_code = SqlErrors::UNKNOWN_ERROR;
-    DEBUG_MSG("Invalid tuple");
-    return false;
-  }
-
-  current_tuple_ = tuple;
-  return handleSearchCondition();
-}
-
 // Private methods
-bool WhereClauseHelper::handleSearchCondition() const {
+bool WhereClauseHelper::HandleSearchCondition() const {
   std::vector<SqlNode *> children = where_node_->Children();
   bool search_predicate = handleBooleanTerm(children[0]);
   for (int index = 1; index < children.size(); index++) {
@@ -52,7 +38,7 @@ bool WhereClauseHelper::handleSearchCondition() const {
   return search_predicate;
 }
 
-bool WhereClauseHelper::handleBooleanTerm(const SqlNode *boolean_term) const {
+bool WhereClauseHelper::handleBooleanTerm(SqlNode *boolean_term) const {
   std::vector<SqlNode *> children = boolean_term->Children();
   bool boolean_term_predicate = handleBooleanFactor(children[0]);
   for (int index = 1; index < children.size(); index++) {
@@ -64,7 +50,7 @@ bool WhereClauseHelper::handleBooleanTerm(const SqlNode *boolean_term) const {
 }
 
 bool WhereClauseHelper::handleBooleanFactor(
-    const SqlNode *boolean_factor) const {
+    SqlNode *boolean_factor) const {
   std::string expression_left = handleExpression(boolean_factor->Child(0));
   std::string expression_right = handleExpression(boolean_factor->Child(1));
 
@@ -107,9 +93,5 @@ std::string WhereClauseHelper::handleTerm(SqlNode *term) const {
     return term->Data();
   }
 
-  return handleColumnName(children[0]);
-}
-
-std::string WhereClauseHelper::handleColumnName(SqlNode *column_name) const {
-  return std::string();
+  return HandleColumnName(children[0]);
 }

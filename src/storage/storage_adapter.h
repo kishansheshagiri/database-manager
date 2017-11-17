@@ -5,7 +5,6 @@
 #include <string>
 #include <vector>
 
-#include "parser/where_clause_helper.h"
 #include "storage/storage_manager_headers.h"
 
 typedef std::vector<std::vector<std::string> > TupleList;

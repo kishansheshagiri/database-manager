@@ -1,4 +1,11 @@
-VPATH = src src/base src/lqp src/parser src/query_plan src/storage storage_manager
+VPATH = src \
+				src/base \
+				src/lqp \
+				src/parser \
+				src/pqp \
+				src/storage \
+				storage_manager
+
 INCLUDEDIR = src
 CFLAGS += -std=c++14 -I. -I$(INCLUDEDIR) -Wno-static-float-init -DDEBUG
 CC = g++
@@ -20,7 +27,9 @@ SOURCES = StorageManager.cpp \
 					statement_factory.cpp \
 					storage_adapter.cpp \
 					tokenizer.cpp \
-					where_clause_helper.cpp
+					where_clause_helper.cpp \
+					where_clause_helper_delete.cpp \
+					where_clause_helper_select.cpp
 
 OBJECTS := $(patsubst %.cpp, %.o, $(SOURCES))
 
