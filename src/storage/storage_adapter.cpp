@@ -197,22 +197,116 @@ bool StorageAdapter::DeleteAllTuples(const std::string& relation_name) const {
   return true;
 }
 
-bool StorageAdapter::DeleteTuples(const std::string& relation_name,
-    const WhereClauseHelper where_clause_helper) const {
-  DEBUG_MSG("NOT IMPLEMENTED");
-  return false;
+bool StorageAdapter::IsValidColumnName(const std::string& table_name,
+    const std::string& attribute_name) const {
+  Relation *relation = schema_manager_->getRelation(table_name);
+  if (relation == nullptr) {
+    ERROR_MSG("Invalid table name: " << table_name);
+    return false;
+  }
+
+  Schema schema = relation->getSchema();
+  if (!schema.fieldNameExists(attribute_name)) {
+    ERROR_MSG("Invalid attribute name '" << attribute_name << \
+        "' for table '" << table_name << "'");
+    return false;
+  }
+
+  return true;
 }
 
+int StorageAdapter::MainMemorySize() const {
+  return main_memory_->getMemorySize();
+}
+
+bool StorageAdapter::ReadRelationBlocks(const std::string relation_name,
+    const int relation_start_index, const int num_blocks,
+    std::vector<Block *>& blocks) const {
+  if (num_blocks > MainMemorySize()) {
+    ERROR_MSG("Invalid number of blocks requested: " << num_blocks);
+    return false;
+  }
+
+  Relation *relation = schema_manager_->getRelation(relation_name);
+  if (relation == nullptr) {
+    ERROR_MSG("Invalid relation name: " << relation_name);
+    return false;
+  }
+
+  if (!relation->getBlocks(relation_start_index, 0, num_blocks)) {
+    DEBUG_MSG("Index out of bound. Index: " << relation_start_index <<
+        ", Relation: " <<relation_name);
+    return false;
+  }
+
+  for (int index = 0; index < num_blocks; index++) {
+    blocks.push_back(main_memory_->getBlock(index));
+  }
+
+  return true;
+}
+
+bool StorageAdapter::InsertBlocksToRelation(const std::string relation_name,
+    const int memory_start_index, const int relation_start_index,
+    const int num_blocks) const {
+  if (memory_start_index > MainMemorySize()) {
+    ERROR_MSG("Invalid main memory index: " << memory_start_index);
+    return false;
+  }
+
+  Relation *relation = schema_manager_->getRelation(relation_name);
+  if (relation == nullptr) {
+    ERROR_MSG("Invalid relation name: " << relation_name);
+    return false;
+  }
+
+  return relation->setBlocks(relation_start_index,
+      memory_start_index, num_blocks);
+}
+
+bool StorageAdapter::AppendBlocksToRelation(const std::string relation_name,
+    const int memory_start_index, const int num_blocks) const {
+  if (memory_start_index > MainMemorySize()) {
+    ERROR_MSG("Invalid main memory index: " << memory_start_index);
+    return false;
+  }
+
+  Relation *relation = schema_manager_->getRelation(relation_name);
+  if (relation == nullptr) {
+    ERROR_MSG("Invalid relation name: " << relation_name);
+    return false;
+  }
+
+  return relation->setBlocks(relation->getNumOfBlocks(),
+      memory_start_index, num_blocks);
+}
+
+bool StorageAdapter::DeleteRelationBlocks(const std::string relation_name,
+    const int start_index) const {
+  Relation *relation = schema_manager_->getRelation(relation_name);
+  if (relation == nullptr) {
+    ERROR_MSG("Invalid relation name: " << relation_name);
+    return false;
+  }
+
+  return relation->deleteBlocks(start_index);
+}
+
+// Debug APIs
 bool StorageAdapter::Tuples(const std::string relation_name,
     TupleList& tuples_as_string) const {
   Relation *relation = schema_manager_->getRelation(relation_name);
+  if (relation == nullptr) {
+    ERROR_MSG("Invalid relation name: " << relation_name);
+    return false;
+  }
 
   int block_count = relation->getNumOfBlocks();
   int last_count = 0;
 
   while (block_count > 0) {
-    int current_block_count = block_count > main_memory_->getMemorySize() ?
-        main_memory_->getMemorySize() : block_count;
+    int current_block_count = block_count > MainMemorySize() ?
+        MainMemorySize() : block_count;
     if (!relation->getBlocks(last_count, 0, current_block_count)) {
       DEBUG_MSG("");
       return false;
@@ -286,24 +380,6 @@ void StorageAdapter::PrintTupleList(const std::string relation_name,
   DEBUG_MSG_SINGLE_LINE("\n");
 }
 
-bool StorageAdapter::IsValidColumnName(const std::string& table_name,
-    const std::string& attribute_name) const {
-  Relation *relation = schema_manager_->getRelation(table_name);
-  if (relation == nullptr) {
-    ERROR_MSG("Invalid table name: " << table_name);
-    return false;
-  }
-
-  Schema schema = relation->getSchema();
-  if (!schema.fieldNameExists(attribute_name)) {
-    ERROR_MSG("Invalid attribute name '" << attribute_name << \
-        "' for table '" << table_name << "'");
-    return false;
-  }
-
-  return true;
-}
-
 // Private methods
 void StorageAdapter::reset() {
   available_memory_index_ = 0;
@@ -348,7 +424,7 @@ void StorageAdapter::appendTupleToRelation(Relation* relation,
 }
 
 void StorageAdapter::clearMainMemoryBlocks() const {
-  for (int index = 0; index < main_memory_->getMemorySize(); index++) {
+  for (int index = 0; index < MainMemorySize(); index++) {
     Block *block = main_memory_->getBlock(index);
     block->clear();
   }

@@ -26,16 +26,27 @@ class StorageAdapter {
       const std::vector<std::string>& field_names,
       const std::vector<std::string>& values) const;
   bool DeleteAllTuples(const std::string& relation_name) const;
-  bool DeleteTuples(const std::string& relation_name,
-      const WhereClauseHelper where_clause_helper) const;
 
+  bool IsValidColumnName(const std::string& table_name,
+      const std::string& attribute_name) const;
+
+  int MainMemorySize() const;
+  bool ReadRelationBlocks(const std::string relation_name,
+      const int relation_start_index, const int num_blocks,
+      std::vector<Block *>& blocks) const;
+  bool InsertBlocksToRelation(const std::string relation_name,
+      const int memory_start_index, const int relation_start_index,
+      const int num_blocks) const;
+  bool AppendBlocksToRelation(const std::string relation_name,
+      const int memory_start_index, const int num_blocks) const;
+  bool DeleteRelationBlocks(const std::string relation_name,
+      const int start_index) const;
+
+  // Debug APIs
   bool Tuples(const std::string relation_name,
       TupleList& tuples_as_string) const;
   void PrintTupleList(const std::string relation_name,
       const TupleList tuples) const;
-
-  bool IsValidColumnName(const std::string& table_name,
-      const std::string& attribute_name) const;
 
  private:
   StorageAdapter();

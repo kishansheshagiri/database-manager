@@ -38,13 +38,6 @@ void DeleteStatement::Execute(SqlErrors::Type& error_code) {
     error_code = SqlErrors::INVALID_SEARCH_CONDITION;
     return;
   }
-
-  WhereClauseHelper helper;
-  if (!helper.Initialize(RootNode()->Child(1), table_name) ||
-      !Storage()->DeleteTuples(table_name, helper)) {
-    DEBUG_MSG("");
-    error_code = SqlErrors::INVALID_SEARCH_CONDITION;
-  }
 }
 
 bool DeleteStatement::SetTables(const std::vector<std::string> tables) {
