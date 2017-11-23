@@ -53,7 +53,7 @@ bool WhereClauseHelperDelete::Execute(SqlErrors::Type& error_code) {
           empty_block->appendTuple(modified_tuples[tuple_index]);
         }
 
-        if (empty_block->isFull()) {
+        if (empty_block->isFull() && empty_block_index < blocks.size() - 1) {
           empty_block = blocks[++empty_block_index];
         }
       }
@@ -79,7 +79,6 @@ bool WhereClauseHelperDelete::Execute(SqlErrors::Type& error_code) {
     blocks.clear();
     if (temp_block != nullptr) {
       blocks.push_back(temp_block);
-      DEBUG_MSG(*temp_block);
       Storage()->SetMainMemoryBlock(0, temp_block);
     }
 
@@ -90,7 +89,6 @@ bool WhereClauseHelperDelete::Execute(SqlErrors::Type& error_code) {
       if (!blocks.empty()) {
         Storage()->InsertBlocksToRelation(table_name_, 0,
             relation_insert_index++, 1);
-        DEBUG_MSG(relation_insert_index);
       }
     }
   }
@@ -150,7 +148,7 @@ std::string WhereClauseHelperDelete::HandleColumnName(
   std::string field_value;
   if (current_tuple_->getSchema().getFieldType(attribute_name) == INT) {
     int value = current_tuple_->getField(attribute_name).integer;
-    std::string field_value = std::to_string(value);
+    field_value = std::to_string(value);
     if (value == INT_MAX) {
       field_value = "NULL";
     }
