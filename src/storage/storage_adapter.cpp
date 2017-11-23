@@ -167,7 +167,7 @@ bool StorageAdapter::CreateTupleAndAppend(const std::string& relation_name,
     if (schema.getFieldType(field) == INT) {
       std::string integer_value = values[index];
       if (values[index] == "NULL") {
-        integer_value = std::to_string(INT_MAX);
+        integer_value = std::to_string(-1);
       }
 
       if (!tuple.setField(field, std::stoi(integer_value))) {
@@ -345,7 +345,7 @@ bool StorageAdapter::Tuples(const std::string relation_name,
         if (tuple.getSchema().getFieldType(index) == INT) {
           int value = tuple.getField(index).integer;
           std::string integer_value = std::to_string(value);
-          if (value == INT_MAX) {
+          if (value == -1) {
             integer_value = "NULL";
           }
 

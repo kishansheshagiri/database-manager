@@ -603,7 +603,7 @@ bool SqlParser::handleTerm(SqlNode *node) {
     return true;
   }
 
-  if (readWord(word) && isInteger(word)) {
+  if (readWord(word) && (isInteger(word) || word == "NULL")) {
     consumeWord(word);
     node->SetData(word);
     return true;

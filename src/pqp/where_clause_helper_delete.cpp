@@ -149,7 +149,7 @@ std::string WhereClauseHelperDelete::HandleColumnName(
   if (current_tuple_->getSchema().getFieldType(attribute_name) == INT) {
     int value = current_tuple_->getField(attribute_name).integer;
     field_value = std::to_string(value);
-    if (value == INT_MAX) {
+    if (value == -1) {
       field_value = "NULL";
     }
   } else if (current_tuple_->getSchema().getFieldType(
