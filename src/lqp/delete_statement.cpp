@@ -1,6 +1,7 @@
 #include "lqp/delete_statement.h"
 
 #include "base/debug.h"
+#include "pqp/where_clause_helper_delete.h"
 
 DeleteStatement::DeleteStatement(const SqlNode *root_node)
   : Statement(root_node) {
@@ -37,6 +38,10 @@ void DeleteStatement::Execute(SqlErrors::Type& error_code) {
     error_code = SqlErrors::INVALID_SEARCH_CONDITION;
     return;
   }
+
+  WhereClauseHelperDelete helper;
+  helper.Initialize(RootNode()->Child(1), table_name);
+  helper.Execute(error_code);
 }
 
 bool DeleteStatement::SetTables(const std::vector<std::string> tables) {

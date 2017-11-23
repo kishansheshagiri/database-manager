@@ -186,15 +186,20 @@ bool StorageAdapter::CreateTupleAndAppend(const std::string& relation_name,
   return true;
 }
 
-bool StorageAdapter::DeleteAllTuples(const std::string& relation_name) const {
+bool StorageAdapter::DeleteTuples(const std::string& relation_name,
+    const int start_index) const {
   Relation *relation = schema_manager_->getRelation(relation_name);
   if (relation == nullptr) {
     DEBUG_MSG("Invalid relation name");
     return false;
   }
 
-  relation->deleteBlocks(0);
+  relation->deleteBlocks(start_index);
   return true;
+}
+
+bool StorageAdapter::DeleteAllTuples(const std::string& relation_name) const {
+  return DeleteTuples(relation_name, 0);
 }
 
 bool StorageAdapter::IsValidColumnName(const std::string& table_name,
@@ -219,27 +224,48 @@ int StorageAdapter::MainMemorySize() const {
   return main_memory_->getMemorySize();
 }
 
-bool StorageAdapter::ReadRelationBlocks(const std::string relation_name,
-    const int relation_start_index, const int num_blocks,
-    std::vector<Block *>& blocks) const {
-  if (num_blocks > MainMemorySize()) {
-    ERROR_MSG("Invalid number of blocks requested: " << num_blocks);
-    return false;
-  }
+void StorageAdapter::SetMainMemoryBlock(int memory_index, Block *block) const {
+  main_memory_->setBlock(memory_index, *block);
+}
 
+int StorageAdapter::RelationBlockSize(const std::string relation_name) const {
   Relation *relation = schema_manager_->getRelation(relation_name);
   if (relation == nullptr) {
-    ERROR_MSG("Invalid relation name: " << relation_name);
+    DEBUG_MSG("Invalid relation name: " << relation_name);
+    return 0;
+  }
+
+  return relation->getNumOfBlocks();
+}
+
+bool StorageAdapter::ReadRelationBlocks(const std::string relation_name,
+    const int relation_start_index, const int memory_start_index,
+    const int num_blocks, std::vector<Block *>& blocks) const {
+  Relation *relation = schema_manager_->getRelation(relation_name);
+  if (relation == nullptr) {
+    DEBUG_MSG("Invalid relation name: " << relation_name);
     return false;
   }
 
-  if (!relation->getBlocks(relation_start_index, 0, num_blocks)) {
+  int adjusted_relation_num_blocks = relation_start_index + num_blocks >=
+      relation->getNumOfBlocks() ?
+          relation->getNumOfBlocks() - relation_start_index : num_blocks;
+
+  int adjusted_memory_num_blocks = memory_start_index + num_blocks >=
+      MainMemorySize() ?
+          MainMemorySize() - memory_start_index : num_blocks;
+
+  int adjusted_num_blocks = std::min(adjusted_relation_num_blocks,
+      adjusted_memory_num_blocks);
+
+  if (!relation->getBlocks(relation_start_index, memory_start_index,
+      adjusted_num_blocks)) {
     DEBUG_MSG("Index out of bound. Index: " << relation_start_index <<
-        ", Relation: " <<relation_name);
+        ", Relation: " << relation_name);
     return false;
   }
 
-  for (int index = 0; index < num_blocks; index++) {
+  for (int index = 0; index < adjusted_num_blocks; index++) {
     blocks.push_back(main_memory_->getBlock(index));
   }
 

@@ -24,15 +24,19 @@ class StorageAdapter {
   bool CreateTupleAndAppend(const std::string& relation_name,
       const std::vector<std::string>& field_names,
       const std::vector<std::string>& values) const;
+  bool DeleteTuples(const std::string& relation_name,
+      const int start_index) const;
   bool DeleteAllTuples(const std::string& relation_name) const;
 
   bool IsValidColumnName(const std::string& table_name,
       const std::string& attribute_name) const;
 
   int MainMemorySize() const;
+  void SetMainMemoryBlock(int memory_index, Block *block) const;
+  int RelationBlockSize(const std::string relation_name) const;
   bool ReadRelationBlocks(const std::string relation_name,
-      const int relation_start_index, const int num_blocks,
-      std::vector<Block *>& blocks) const;
+      const int relation_start_index, const int memory_start_index,
+      const int num_blocks, std::vector<Block *>& blocks) const;
   bool InsertBlocksToRelation(const std::string relation_name,
       const int memory_start_index, const int relation_start_index,
       const int num_blocks) const;

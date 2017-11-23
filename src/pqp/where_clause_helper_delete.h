@@ -15,12 +15,14 @@ class WhereClauseHelperDelete : public WhereClauseHelper {
   WhereClauseHelperDelete();
   ~WhereClauseHelperDelete();
 
-  bool Initialize(SqlNode *where_node, std::string table_name = "");
-  bool Evaluate(Tuple *tuple, SqlErrors::Type& error_code) override;
+  bool Initialize(SqlNode *where_node, std::string table_name);
+  bool Execute(SqlErrors::Type& error_code);
 
  private:
-  virtual std::string HandleColumnName(SqlNode *column_name) const override;
+  bool Evaluate(Tuple *tuple, SqlErrors::Type& error_code) override;
+  virtual std::string HandleColumnName(SqlNode *column_name) override;
 
+  SqlErrors::Type error_code_;
   std::string table_name_;
   Tuple *current_tuple_;
 };

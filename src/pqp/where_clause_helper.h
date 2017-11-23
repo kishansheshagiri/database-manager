@@ -18,17 +18,17 @@ class WhereClauseHelper {
   bool Initialize(SqlNode *where_node);
   virtual bool Evaluate(Tuple *tuple, SqlErrors::Type& error_code) = 0;
 
-  virtual std::string HandleColumnName(SqlNode *column_name) const = 0;
-  bool HandleSearchCondition() const;
+  virtual std::string HandleColumnName(SqlNode *column_name) = 0;
+  bool HandleSearchCondition();
 
   StorageAdapter *Storage() { return storage_adapter_; }
   SqlNode *RootNode() { return where_node_; }
 
  private:
-  bool handleBooleanTerm(SqlNode *boolean_term) const;
-  bool handleBooleanFactor(SqlNode *boolean_factor) const;
-  std::string handleExpression(SqlNode *expression) const;
-  std::string handleTerm(SqlNode *term) const;
+  bool handleBooleanTerm(SqlNode *boolean_term);
+  bool handleBooleanFactor(SqlNode *boolean_factor);
+  std::string handleExpression(SqlNode *expression);
+  std::string handleTerm(SqlNode *term);
 
   SqlNode *where_node_;
   StorageAdapter *storage_adapter_;

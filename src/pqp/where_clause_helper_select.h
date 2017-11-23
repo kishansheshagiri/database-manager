@@ -20,7 +20,7 @@ class WhereClauseHelperSelect : public WhereClauseHelper {
   bool Evaluate(Tuple *tuple, SqlErrors::Type& error_code) override;
 
  private:
-  virtual std::string HandleColumnName(SqlNode *column_name) const override;
+  virtual std::string HandleColumnName(SqlNode *column_name) override;
 
   std::vector<std::string> table_list_;
   Tuple *current_tuple_;

@@ -28,7 +28,7 @@ bool WhereClauseHelper::Initialize(SqlNode *where_node) {
 }
 
 // Private methods
-bool WhereClauseHelper::HandleSearchCondition() const {
+bool WhereClauseHelper::HandleSearchCondition() {
   std::vector<SqlNode *> children = where_node_->Children();
   bool search_predicate = handleBooleanTerm(children[0]);
   for (int index = 1; index < children.size(); index++) {
@@ -38,7 +38,7 @@ bool WhereClauseHelper::HandleSearchCondition() const {
   return search_predicate;
 }
 
-bool WhereClauseHelper::handleBooleanTerm(SqlNode *boolean_term) const {
+bool WhereClauseHelper::handleBooleanTerm(SqlNode *boolean_term) {
   std::vector<SqlNode *> children = boolean_term->Children();
   bool boolean_term_predicate = handleBooleanFactor(children[0]);
   for (int index = 1; index < children.size(); index++) {
@@ -50,7 +50,7 @@ bool WhereClauseHelper::handleBooleanTerm(SqlNode *boolean_term) const {
 }
 
 bool WhereClauseHelper::handleBooleanFactor(
-    SqlNode *boolean_factor) const {
+    SqlNode *boolean_factor) {
   std::string expression_left = handleExpression(boolean_factor->Child(0));
   std::string expression_right = handleExpression(boolean_factor->Child(1));
 
@@ -64,7 +64,7 @@ bool WhereClauseHelper::handleBooleanFactor(
   }
 }
 
-std::string WhereClauseHelper::handleExpression(SqlNode *expression) const {
+std::string WhereClauseHelper::handleExpression(SqlNode *expression) {
   std::vector<SqlNode *> children = expression->Children();
   std::string term_left = handleTerm(children[0]);
   if (children.size() == 1) {
@@ -87,7 +87,7 @@ std::string WhereClauseHelper::handleExpression(SqlNode *expression) const {
   return std::to_string(result);
 }
 
-std::string WhereClauseHelper::handleTerm(SqlNode *term) const {
+std::string WhereClauseHelper::handleTerm(SqlNode *term) {
   std::vector<SqlNode *> children = term->Children();
   if (children.size() == 0) {
     return term->Data();

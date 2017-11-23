@@ -31,7 +31,7 @@ bool WhereClauseHelperSelect::Evaluate(Tuple *tuple,
 
 // Private methods
 std::string WhereClauseHelperSelect::HandleColumnName(
-    SqlNode *column_name) const {
+    SqlNode *column_name) {
   ERROR_MSG("NOT_IMPLEMENTED");
   return std::string();
 }
