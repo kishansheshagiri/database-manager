@@ -9,6 +9,12 @@
   std::cout.setstate(std::ios_base::failbit); \
 } while (false)
 
+#define ERROR_MSG_SINGLE_LINE(str) do { \
+  std::cout.clear(); \
+  std::cout << str; \
+  std::cout.setstate(std::ios_base::failbit); \
+} while (false)
+
 #if defined(DEBUG)
 #define DEBUG_MSG(str) do { \
   std::cout.clear(); \
@@ -39,6 +45,12 @@ void inline DisableConsoleLogs() {
 #if !defined(DEBUG) && !defined(LOGGING)
   std::cout.setstate(std::ios_base::failbit);
   std::cerr.setstate(std::ios_base::failbit);
+#endif
+}
+
+void inline EnableConsoleLogs() {
+#if !defined(DEBUG) && !defined(LOGGING)
+  std::cout.clear();
 #endif
 }
 
