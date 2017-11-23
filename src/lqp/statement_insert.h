@@ -1,13 +1,13 @@
-#ifndef SRC_LQP_INSERT_STATEMENT_H
-#define SRC_LQP_INSERT_STATEMENT_H
+#ifndef SRC_LQP_STATEMENT_INSERT_H
+#define SRC_LQP_STATEMENT_INSERT_H
 
 #include "lqp/statement.h"
 #include "parser/sql_node.h"
 
-class InsertStatement : public Statement {
+class StatementInsert : public Statement {
  public:
-  InsertStatement(const SqlNode *root_node);
-  virtual ~InsertStatement();
+  StatementInsert(const SqlNode *root_node);
+  virtual ~StatementInsert();
 
   void Execute(SqlErrors::Type& error_code) override;
 
@@ -19,4 +19,4 @@ class InsertStatement : public Statement {
   std::vector<std::string> values_;
 };
 
-#endif // SRC_LQP_INSERT_STATEMENT_H
+#endif // SRC_LQP_STATEMENT_INSERT_H

@@ -1,15 +1,15 @@
-#include "lqp/select_statement.h"
+#include "lqp/statement_select.h"
 
 #include "base/debug.h"
 
-SelectStatement::SelectStatement(const SqlNode *root_node)
+StatementSelect::StatementSelect(const SqlNode *root_node)
   : Statement(root_node) {
 }
 
-SelectStatement::~SelectStatement() {
+StatementSelect::~StatementSelect() {
 }
 
-void SelectStatement::Execute(SqlErrors::Type& error_code) {
+void StatementSelect::Execute(SqlErrors::Type& error_code) {
   if (RootNode() == nullptr ||
       RootNode()->Type() != SqlNode::NODE_TYPE_SELECT_STATEMENT) {
     DEBUG_MSG("");

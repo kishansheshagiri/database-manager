@@ -1,15 +1,15 @@
-#include "lqp/insert_statement.h"
+#include "lqp/statement_insert.h"
 
 #include "base/debug.h"
 
-InsertStatement::InsertStatement(const SqlNode *root_node)
+StatementInsert::StatementInsert(const SqlNode *root_node)
   : Statement(root_node) {
 }
 
-InsertStatement::~InsertStatement() {
+StatementInsert::~StatementInsert() {
 }
 
-void InsertStatement::Execute(SqlErrors::Type& error_code) {
+void StatementInsert::Execute(SqlErrors::Type& error_code) {
   if (RootNode() == nullptr ||
       RootNode()->Type() != SqlNode::NODE_TYPE_INSERT_STATEMENT) {
     DEBUG_MSG("");
@@ -43,7 +43,7 @@ void InsertStatement::Execute(SqlErrors::Type& error_code) {
   }
 }
 
-bool InsertStatement::SetTables(const std::vector<std::string> tables) {
+bool StatementInsert::SetTables(const std::vector<std::string> tables) {
   if (tables.size() != 1) {
     DEBUG_MSG("");
     return false;

@@ -1,16 +1,16 @@
-#include "lqp/delete_statement.h"
+#include "lqp/statement_delete.h"
 
 #include "base/debug.h"
 #include "pqp/where_clause_helper_delete.h"
 
-DeleteStatement::DeleteStatement(const SqlNode *root_node)
+StatementDelete::StatementDelete(const SqlNode *root_node)
   : Statement(root_node) {
 }
 
-DeleteStatement::~DeleteStatement() {
+StatementDelete::~StatementDelete() {
 }
 
-void DeleteStatement::Execute(SqlErrors::Type& error_code) {
+void StatementDelete::Execute(SqlErrors::Type& error_code) {
   if (RootNode() == nullptr ||
       RootNode()->Type() != SqlNode::NODE_TYPE_DELETE_STATEMENT) {
     DEBUG_MSG("");
@@ -44,7 +44,7 @@ void DeleteStatement::Execute(SqlErrors::Type& error_code) {
   helper.Execute(error_code);
 }
 
-bool DeleteStatement::SetTables(const std::vector<std::string> tables) {
+bool StatementDelete::SetTables(const std::vector<std::string> tables) {
   if (tables.size() != 1) {
     DEBUG_MSG("");
     return false;

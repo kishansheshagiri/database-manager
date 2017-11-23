@@ -1,15 +1,15 @@
-#include "lqp/drop_table_statement.h"
+#include "lqp/statement_drop_table.h"
 
 #include "base/debug.h"
 
-DropTableStatement::DropTableStatement(const SqlNode *root_node)
+StatementDropTable::StatementDropTable(const SqlNode *root_node)
   : Statement(root_node) {
 }
 
-DropTableStatement::~DropTableStatement() {
+StatementDropTable::~StatementDropTable() {
 }
 
-void DropTableStatement::Execute(SqlErrors::Type& error_code) {
+void StatementDropTable::Execute(SqlErrors::Type& error_code) {
   if (RootNode() == nullptr ||
       RootNode()->Type() != SqlNode::NODE_TYPE_DROP_TABLE_STATEMENT) {
     DEBUG_MSG("");
@@ -30,7 +30,7 @@ void DropTableStatement::Execute(SqlErrors::Type& error_code) {
   }
 }
 
-bool DropTableStatement::SetTables(const std::vector<std::string> tables) {
+bool StatementDropTable::SetTables(const std::vector<std::string> tables) {
   if (tables.size() != 1) {
     DEBUG_MSG("");
     return false;

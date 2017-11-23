@@ -13,18 +13,18 @@ TARGET = database-manager
 OBJDIR = obj
 
 SOURCES = StorageManager.cpp \
-					create_table_statement.cpp \
-					delete_statement.cpp \
-					drop_table_statement.cpp \
-					insert_statement.cpp \
 					main.cpp \
 					query_manager.cpp \
-					select_statement.cpp \
 					sql_errors.cpp \
 					sql_node.cpp \
 					sql_parser.cpp \
 					statement.cpp \
+					statement_create_table.cpp \
+					statement_delete.cpp \
+					statement_drop_table.cpp \
 					statement_factory.cpp \
+					statement_insert.cpp \
+					statement_select.cpp \
 					storage_adapter.cpp \
 					tokenizer.cpp \
 					where_clause_helper.cpp \

@@ -2,11 +2,11 @@
 
 #include <memory>
 
-#include "lqp/create_table_statement.h"
-#include "lqp/drop_table_statement.h"
-#include "lqp/select_statement.h"
-#include "lqp/delete_statement.h"
-#include "lqp/insert_statement.h"
+#include "lqp/statement_create_table.h"
+#include "lqp/statement_delete.h"
+#include "lqp/statement_drop_table.h"
+#include "lqp/statement_insert.h"
+#include "lqp/statement_select.h"
 
 StatementFactory::StatementFactory(SqlNode *root)
     : root_(root) {
@@ -20,15 +20,15 @@ Statement *StatementFactory::Create() const {
   SqlNode::NodeType node_type = root_->Type();
   switch (node_type) {
     case SqlNode::NODE_TYPE_CREATE_TABLE_STATEMENT:
-      return new CreateTableStatement(root_);
-    case SqlNode::NODE_TYPE_DROP_TABLE_STATEMENT:
-      return new DropTableStatement(root_);
-    case SqlNode::NODE_TYPE_SELECT_STATEMENT:
-      return new SelectStatement(root_);
+      return new StatementCreateTable(root_);
     case SqlNode::NODE_TYPE_DELETE_STATEMENT:
-      return new DeleteStatement(root_);
+      return new StatementDelete(root_);
+    case SqlNode::NODE_TYPE_DROP_TABLE_STATEMENT:
+      return new StatementDropTable(root_);
     case SqlNode::NODE_TYPE_INSERT_STATEMENT:
-      return new InsertStatement(root_);
+      return new StatementInsert(root_);
+    case SqlNode::NODE_TYPE_SELECT_STATEMENT:
+      return new StatementSelect(root_);
     default:
       return nullptr;
   }

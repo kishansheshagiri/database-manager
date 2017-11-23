@@ -1,5 +1,5 @@
-#ifndef SRC_LQP_CREATE_TABLE_STATEMENT_H
-#define SRC_LQP_CREATE_TABLE_STATEMENT_H
+#ifndef SRC_LQP_STATEMENT_CREATE_TABLE_H
+#define SRC_LQP_STATEMENT_CREATE_TABLE_H
 
 #include <string>
 #include <vector>
@@ -8,10 +8,10 @@
 #include "parser/sql_node.h"
 #include "storage/storage_manager_headers.h"
 
-class CreateTableStatement : public Statement {
+class StatementCreateTable : public Statement {
  public:
-  CreateTableStatement(const SqlNode *root_node);
-  virtual ~CreateTableStatement();
+  StatementCreateTable(const SqlNode *root_node);
+  virtual ~StatementCreateTable();
 
   void Execute(SqlErrors::Type& error_code) override;
 
@@ -23,4 +23,4 @@ class CreateTableStatement : public Statement {
   std::vector<FIELD_TYPE> attribute_types_;
 };
 
-#endif // SRC_LQP_CREATE_TABLE_STATEMENT_H
+#endif // SRC_LQP_STATEMENT_CREATE_TABLE_H

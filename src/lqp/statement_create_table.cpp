@@ -1,15 +1,15 @@
-#include "lqp/create_table_statement.h"
+#include "lqp/statement_create_table.h"
 
 #include "base/debug.h"
 
-CreateTableStatement::CreateTableStatement(const SqlNode *root_node)
+StatementCreateTable::StatementCreateTable(const SqlNode *root_node)
     : Statement(root_node) {
 }
 
-CreateTableStatement::~CreateTableStatement() {
+StatementCreateTable::~StatementCreateTable() {
 }
 
-void CreateTableStatement::Execute(SqlErrors::Type& error_code) {
+void StatementCreateTable::Execute(SqlErrors::Type& error_code) {
   if (RootNode() == nullptr ||
       RootNode()->Type() != SqlNode::NODE_TYPE_CREATE_TABLE_STATEMENT) {
     DEBUG_MSG("");
@@ -38,7 +38,7 @@ void CreateTableStatement::Execute(SqlErrors::Type& error_code) {
   }
 }
 
-bool CreateTableStatement::SetTables(const std::vector<std::string> tables) {
+bool StatementCreateTable::SetTables(const std::vector<std::string> tables) {
   if (tables.size() != 1) {
     DEBUG_MSG("");
     return false;
