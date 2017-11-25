@@ -1,6 +1,7 @@
 #include "parser/sql_node.h"
 
 #include "base/debug.h"
+#include "base/duplicate_finder.h"
 
 SqlNode::SqlNode(NodeType type, std::string data)
     : type_(type),
@@ -135,6 +136,12 @@ bool SqlNode::AttributeTypeList(std::vector<std::string>& attribute_names,
     }
   }
 
+  DuplicateFinder<std::string> duplicate_finder(attribute_names);
+  if (duplicate_finder.HasDuplicates()) {
+    DEBUG_MSG("Contains duplicate attribute names");
+    return false;
+  }
+
   if (attribute_names.size() == attribute_types.size()) {
     return true;
   } else {
@@ -156,6 +163,12 @@ bool SqlNode::SelectList(std::vector<std::string>& select_list) const {
       return false;
     }
     select_list.push_back(column_name);
+  }
+
+  DuplicateFinder<std::string> duplicate_finder(select_list);
+  if (duplicate_finder.HasDuplicates()) {
+    DEBUG_MSG("Contains duplicate attribute names in SELECT list");
+    return false;
   }
 
   return true;
@@ -204,6 +217,12 @@ bool SqlNode::TableList(std::vector<std::string>& table_list) const {
     table_list.push_back(table_name);
   }
 
+  DuplicateFinder<std::string> duplicate_finder(table_list);
+  if (duplicate_finder.HasDuplicates()) {
+    DEBUG_MSG("Contains duplicate table names");
+    return false;
+  }
+
   return true;
 }
 
@@ -221,6 +240,12 @@ bool SqlNode::AttributeList(std::vector<std::string>& attribute_list) const {
     }
 
     attribute_list.push_back(attribute_name);
+  }
+
+  DuplicateFinder<std::string> duplicate_finder(attribute_list);
+  if (duplicate_finder.HasDuplicates()) {
+    DEBUG_MSG("Contains duplicate attribute names");
+    return false;
   }
 
   return true;

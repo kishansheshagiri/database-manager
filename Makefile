@@ -13,6 +13,7 @@ TARGET = database-manager
 OBJDIR = obj
 
 SOURCES = StorageManager.cpp \
+					duplicate_finder.cpp \
 					main.cpp \
 					query_manager.cpp \
 					sql_errors.cpp \
