@@ -59,7 +59,6 @@ bool Tokenizer::ReadLiteral(const std::string& input, std::string& literal) {
   return false;
 }
 
-// Static methods
 bool Tokenizer::SplitIntoTwo(const std::string& word,
     const char& separator,
     std::string& first, std::string& second) {

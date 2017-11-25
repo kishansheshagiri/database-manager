@@ -3,6 +3,7 @@
 #include <regex>
 
 #include "base/debug.h"
+#include "base/tokenizer.h"
 
 void SqlParser::SetQuery(std::string query) {
   input_query_ = query;
@@ -32,7 +33,7 @@ bool SqlParser::readWord(std::string& word) {
 
   char separator = '\0';
   int leading_spaces = 0;
-  if (!tokenizer_.ReadOneWord(
+  if (!Tokenizer::ReadOneWord(
       std::string(input_query_.substr(current_query_position_)), word,
       separator, leading_spaces)) {
     DEBUG_MSG("");
@@ -40,7 +41,7 @@ bool SqlParser::readWord(std::string& word) {
   }
 
   if (!word.compare(" ")) {
-    return tokenizer_.ReadOneWord(
+    return Tokenizer::ReadOneWord(
         std::string(input_query_.substr(current_query_position_ + 1)), word,
         separator, leading_spaces);
   }
@@ -56,7 +57,7 @@ bool SqlParser::consumeWord(std::string& word) {
 
   char separator = '\0';
   int leading_spaces = 0;
-  if (!tokenizer_.ReadOneWord(
+  if (!Tokenizer::ReadOneWord(
       std::string(input_query_.substr(current_query_position_)), word,
       separator, leading_spaces)) {
     DEBUG_MSG("");
@@ -83,7 +84,7 @@ bool SqlParser::consumeLiteral(std::string& literal) {
   }
 
   consumeSpaceCharacters();
-  if (tokenizer_.ReadLiteral(
+  if (Tokenizer::ReadLiteral(
       std::string(input_query_.substr(current_query_position_)), literal)) {
     current_query_position_ += literal.length();
     return true;

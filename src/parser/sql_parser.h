@@ -1,10 +1,9 @@
-#ifndef SRC_SQL_PARSER_H
-#define SRC_SQL_PARSER_H
+#ifndef SRC_BASE_SQL_PARSER_H
+#define SRC_BASE_SQL_PARSER_H
 
 #include <string>
 
 #include "base/sql_errors.h"
-#include "base/tokenizer.h"
 #include "parser/sql_node.h"
 
 class SqlParser {
@@ -55,8 +54,6 @@ class SqlParser {
 
   std::string input_query_;
   int current_query_position_;
-
-  Tokenizer tokenizer_;
 };
 
-#endif //SRC_SQL_PARSER_H
+#endif //SRC_BASE_SQL_PARSER_H
