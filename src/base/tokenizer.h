@@ -1,11 +1,7 @@
 #ifndef SRC_TOKENIZER_H
 #define SRC_TOKENIZER_H
 
-#include <regex>
 #include <string>
-#include <vector>
-
-#include "base/sql_errors.h"
 
 class Tokenizer {
  public:
@@ -14,6 +10,8 @@ class Tokenizer {
   bool ReadOneWord(const std::string& list, std::string& word,
       char& separator, int& leading_spaces);
   bool ReadLiteral(const std::string& input, std::string& literal);
+  static bool SplitIntoTwo(const std::string& word, const char& separator,
+      std::string& first, std::string& second);
 };
 
 #endif // SRC_TOKENIZER_H

@@ -65,6 +65,11 @@ bool SqlNode::TableName(std::string& table_name) const {
     return false;
   }
 
+  if (!isValidTableName()) {
+    DEBUG_MSG("");
+    return false;
+  }
+
   table_name = Data();
   return true;
 }
@@ -162,7 +167,25 @@ bool SqlNode::ColumnName(std::string& column_name) const {
     return false;
   }
 
-  column_name = Data();
+  if (!isValidColumnName()) {
+    DEBUG_MSG("");
+    return false;
+  }
+
+  if (children_.size() == 0) {
+    column_name = Data();
+    return true;
+  } else if (children_.size() == 1) {
+    return children_[0]->AttributeName(column_name);
+  }
+
+  std::string table_name, attribute_name;
+  if (!children_[0]->TableName(table_name) ||
+      !children_[1]->AttributeName(attribute_name)) {
+    return false;
+  }
+
+  column_name =  table_name + "." + attribute_name;
   return true;
 }
 
@@ -342,17 +365,21 @@ bool SqlNode::isValidTerm() const {
 }
 
 bool SqlNode::isValidColumnName() const {
-  if (type_ != NODE_TYPE_COLUMN_NAME ||
-      (children_.size() != 1 && children_.size() != 2)) {
-    DEBUG_MSG("Column name has invalid number of children");
+  if (type_ != NODE_TYPE_COLUMN_NAME) {
+    DEBUG_MSG("Invalid node type for column");
     return false;
   }
 
-  if (children_.size() == 1) {
+  if (children_.size() == 0) {
+    return Data() == "*";
+  } else if (children_.size() == 1) {
     return children_[0]->isValidAttributeName();
-  } else {
+  } else if (children_.size() == 2) {
     return children_[0]->isValidTableName() &&
         children_[1]->isValidAttributeName();
+  } else {
+    DEBUG_MSG("Invalid number of children for column name node");
+    return false;
   }
 }
 

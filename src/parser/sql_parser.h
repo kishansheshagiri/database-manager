@@ -3,8 +3,9 @@
 
 #include <string>
 
+#include "base/sql_errors.h"
+#include "base/tokenizer.h"
 #include "parser/sql_node.h"
-#include "parser/tokenizer.h"
 
 class SqlParser {
  public:

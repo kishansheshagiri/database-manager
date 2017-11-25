@@ -29,6 +29,9 @@ std::ostream &operator <<(std::ostream &out, const SqlErrors::Type type) {
     case SqlErrors::INVALID_SELECT_LIST:
       out << "List of selection attributes is invalid";
       break;
+    case SqlErrors::AMBIGUOUS_SELECT_LIST:
+      out << "Statement contains ambiguous column names";
+      break;
     case SqlErrors::INVALID_ATTRIBUTES:
       out << "Attribute list is invalid";
       break;

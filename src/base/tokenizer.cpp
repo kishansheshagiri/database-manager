@@ -1,7 +1,6 @@
 #include "tokenizer.h"
 
 #include "base/debug.h"
-#include "base/sql_errors.h"
 
 const std::string symbol_list = " ,.()<>=+-*";
 
@@ -58,4 +57,24 @@ bool Tokenizer::ReadLiteral(const std::string& input, std::string& literal) {
 
   LOG_MSG("");
   return false;
+}
+
+// Static methods
+bool Tokenizer::SplitIntoTwo(const std::string& word,
+    const char& separator,
+    std::string& first, std::string& second) {
+  if (word.size() == 0) {
+    return false;
+  }
+
+  std::size_t position = word.find(separator);
+  if (position == std::string::npos) {
+    first = word;
+    second.clear();
+    return true;
+  }
+
+  first = word.substr(0, position);
+  second = word.substr(position + 1);
+  return true;
 }

@@ -10,6 +10,14 @@ class StatementSelect : public Statement {
   virtual ~StatementSelect();
 
   void Execute(SqlErrors::Type& error_code) override;
+
+ private:
+  bool validateLists(SqlErrors::Type& error_code) const;
+
+  bool distinct_;
+  std::vector<std::string> select_list_;
+  std::vector<std::string> table_list_;
+  SqlNode *where_node_;
 };
 
 #endif // SRC_LQP_STATEMENT_SELECT_H
