@@ -50,8 +50,8 @@ bool QueryPlanBuilder::Build() {
     return false;
   }
 
-  std::vector<std::string> attribute_list;
-  if (where_node_ != nullptr && where_helper_.CanUseJoin(attribute_list)) {
+  JoinAttributes join_attributes;
+  if (where_node_ != nullptr && where_helper_.CanUseJoin(join_attributes)) {
     DEBUG_MSG("NOT IMPLEMENTED");
     return false;
   }

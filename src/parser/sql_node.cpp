@@ -202,7 +202,7 @@ bool SqlNode::ColumnName(std::string& column_name) const {
     return false;
   }
 
-  column_name =  table_name + "." + attribute_name;
+  column_name = table_name + "." + attribute_name;
   return true;
 }
 

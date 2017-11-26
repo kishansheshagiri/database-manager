@@ -30,6 +30,8 @@ class StorageAdapter {
 
   bool IsValidColumnName(const std::string& table_name,
       const std::string& attribute_name) const;
+  bool AttributeType(const std::string& table_name,
+      const std::string& attribute_name, enum FIELD_TYPE& type);
 
   int MainMemorySize() const;
   void SetMainMemoryBlock(int memory_index, Block *block) const;

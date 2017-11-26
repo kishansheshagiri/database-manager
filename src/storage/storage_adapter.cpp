@@ -206,7 +206,7 @@ bool StorageAdapter::IsValidColumnName(const std::string& table_name,
     const std::string& attribute_name) const {
   Relation *relation = schema_manager_->getRelation(table_name);
   if (relation == nullptr) {
-    ERROR_MSG("Invalid table name: " << table_name);
+    DEBUG_MSG("Invalid table name: " << table_name);
     return false;
   }
 
@@ -214,6 +214,23 @@ bool StorageAdapter::IsValidColumnName(const std::string& table_name,
   if (!schema.fieldNameExists(attribute_name)) {
     ERROR_MSG("Invalid attribute name '" << attribute_name << \
         "' for table '" << table_name << "'");
+    return false;
+  }
+
+  return true;
+}
+
+bool StorageAdapter::AttributeType(const std::string& table_name,
+    const std::string& attribute_name, enum FIELD_TYPE& type) {
+  Relation *relation = schema_manager_->getRelation(table_name);
+  if (relation == nullptr) {
+    DEBUG_MSG("Invalid table name: " << table_name);
+    return false;
+  }
+
+  type = relation->getSchema().getFieldType(attribute_name);
+  if (type != INT && type != STR20) {
+    DEBUG_MSG("");
     return false;
   }
 

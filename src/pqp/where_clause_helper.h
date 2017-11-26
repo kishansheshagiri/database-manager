@@ -21,8 +21,8 @@ class WhereClauseHelper {
   virtual std::string HandleColumnName(SqlNode *column_name) = 0;
   bool HandleSearchCondition();
 
-  StorageAdapter *Storage() { return storage_adapter_; }
-  SqlNode *RootNode() { return where_node_; }
+  StorageAdapter *Storage() const { return storage_adapter_; }
+  SqlNode *RootNode() const { return where_node_; }
 
  private:
   bool handleBooleanTerm(SqlNode *boolean_term);
