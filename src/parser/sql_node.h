@@ -47,6 +47,7 @@ class SqlNode {
   SqlNode *Child(int index) const;
   void RemoveAllChildren();
   std::vector<SqlNode *> Children() const;
+  int ChildrenCount() const;
 
   NodeType Type() const;
   void SetType(NodeType type);

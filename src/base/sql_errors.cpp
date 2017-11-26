@@ -41,6 +41,9 @@ std::ostream &operator <<(std::ostream &out, const SqlErrors::Type type) {
     case SqlErrors::INVALID_SEARCH_CONDITION:
       out << "Invalid search condition";
       break;
+    case SqlErrors::INVALID_SORT_ATTRIBUTE:
+      out << "Sort column is invalid";
+      break;
     case SqlErrors::INEXISTENT_TABLE:
       out << "Table does not exist";
       break;

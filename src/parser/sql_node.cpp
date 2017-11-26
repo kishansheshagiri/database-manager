@@ -44,6 +44,10 @@ std::vector<SqlNode *> SqlNode::Children() const {
   return children_;
 }
 
+int SqlNode::ChildrenCount() const {
+  return children_.size();
+}
+
 SqlNode::NodeType SqlNode::Type() const {
   return type_;
 }

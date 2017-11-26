@@ -18,6 +18,7 @@ class StatementSelect : public Statement {
   std::vector<std::string> select_list_;
   std::vector<std::string> table_list_;
   SqlNode *where_node_;
+  std::string sort_column_;
 };
 
 #endif // SRC_LQP_STATEMENT_SELECT_H
