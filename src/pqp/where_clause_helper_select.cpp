@@ -29,6 +29,12 @@ bool WhereClauseHelperSelect::Evaluate(Tuple *tuple,
   return HandleSearchCondition();
 }
 
+bool WhereClauseHelperSelect::CanUseJoin(
+    std::vector<std::string>& attribute_list) const {
+  ERROR_MSG("NOT_IMPLEMENTED");
+  return false;
+}
+
 // Private methods
 std::string WhereClauseHelperSelect::HandleColumnName(
     SqlNode *column_name) {

@@ -19,6 +19,8 @@ class WhereClauseHelperSelect : public WhereClauseHelper {
       const std::vector<std::string> table_list);
   bool Evaluate(Tuple *tuple, SqlErrors::Type& error_code) override;
 
+  bool CanUseJoin(std::vector<std::string>& attribute_list) const;
+
  private:
   virtual std::string HandleColumnName(SqlNode *column_name) override;
 

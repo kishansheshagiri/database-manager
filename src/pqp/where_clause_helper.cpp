@@ -27,7 +27,6 @@ bool WhereClauseHelper::Initialize(SqlNode *where_node) {
   return true;
 }
 
-// Private methods
 bool WhereClauseHelper::HandleSearchCondition() {
   std::vector<SqlNode *> children = where_node_->Children();
   bool search_predicate = handleBooleanTerm(children[0]);
@@ -38,6 +37,7 @@ bool WhereClauseHelper::HandleSearchCondition() {
   return search_predicate;
 }
 
+// Private methods
 bool WhereClauseHelper::handleBooleanTerm(SqlNode *boolean_term) {
   std::vector<SqlNode *> children = boolean_term->Children();
   bool boolean_term_predicate = handleBooleanFactor(children[0]);

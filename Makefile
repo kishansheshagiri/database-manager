@@ -16,6 +16,8 @@ SOURCES = StorageManager.cpp \
 					duplicate_finder.cpp \
 					main.cpp \
 					query_manager.cpp \
+					query_node.cpp \
+					query_plan_builder.cpp \
 					sql_errors.cpp \
 					sql_node.cpp \
 					sql_parser.cpp \
