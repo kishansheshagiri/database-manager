@@ -19,7 +19,9 @@ class WhereClauseHelper {
   virtual bool Evaluate(Tuple *tuple, SqlErrors::Type& error_code) = 0;
 
   virtual std::string HandleColumnName(SqlNode *column_name) = 0;
-  bool HandleSearchCondition();
+  bool HandleSearchCondition(Tuple *tuple);
+  bool ValueFromTuple(const std::string attribute_name,
+      std::string& field_value, SqlErrors::Type& error_code);
 
   StorageAdapter *Storage() const { return storage_adapter_; }
   SqlNode *RootNode() const { return where_node_; }
@@ -31,6 +33,7 @@ class WhereClauseHelper {
   std::string handleTerm(SqlNode *term);
 
   SqlNode *where_node_;
+  Tuple *current_tuple_;
   StorageAdapter *storage_adapter_;
 };
 

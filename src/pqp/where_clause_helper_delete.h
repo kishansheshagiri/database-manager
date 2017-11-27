@@ -24,7 +24,6 @@ class WhereClauseHelperDelete : public WhereClauseHelper {
 
   SqlErrors::Type error_code_;
   std::string table_name_;
-  Tuple *current_tuple_;
 };
 
 #endif // SRC_PQP_WHERE_CLAUSE_HELPER_DELETE_H_

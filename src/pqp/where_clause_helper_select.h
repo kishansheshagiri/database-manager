@@ -41,8 +41,8 @@ class WhereClauseHelperSelect : public WhereClauseHelper {
   bool tryJoinExpression(SqlNode *expression,
       std::string& join_candidate) const;
 
+  SqlErrors::Type error_code_;
   std::vector<std::string> table_list_;
-  Tuple *current_tuple_;
 };
 
 #endif // SRC_PQP_WHERE_CLAUSE_HELPER_SELECT_H_

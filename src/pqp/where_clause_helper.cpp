@@ -27,7 +27,9 @@ bool WhereClauseHelper::Initialize(SqlNode *where_node) {
   return true;
 }
 
-bool WhereClauseHelper::HandleSearchCondition() {
+bool WhereClauseHelper::HandleSearchCondition(Tuple *tuple) {
+  current_tuple_ = tuple;
+
   std::vector<SqlNode *> children = where_node_->Children();
   bool search_predicate = handleBooleanTerm(children[0]);
   for (int index = 1; index < children.size(); index++) {
@@ -35,6 +37,26 @@ bool WhereClauseHelper::HandleSearchCondition() {
   }
 
   return search_predicate;
+}
+
+bool WhereClauseHelper::ValueFromTuple(const std::string attribute_name,
+    std::string& field_value, SqlErrors::Type& error_code) {
+  if (current_tuple_->getSchema().getFieldType(attribute_name) == INT) {
+    int value = current_tuple_->getField(attribute_name).integer;
+    field_value = std::to_string(value);
+    if (value == -1) {
+      field_value = "NULL";
+    }
+  } else if (current_tuple_->getSchema().getFieldType(
+        attribute_name) == STR20) {
+    field_value = *(current_tuple_->getField(attribute_name).str);
+  } else {
+    DEBUG_MSG("Column name invalid for the table");
+    error_code = SqlErrors::INVALID_COLUMN_NAME;
+    return false;
+  }
+
+  return true;
 }
 
 // Private methods

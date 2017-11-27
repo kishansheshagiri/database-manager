@@ -106,8 +106,7 @@ bool WhereClauseHelperDelete::Evaluate(Tuple *tuple,
     return false;
   }
 
-  current_tuple_ = tuple;
-  bool condition_result = HandleSearchCondition();
+  bool condition_result = HandleSearchCondition(tuple);
   if (error_code_ != SqlErrors::NO_ERROR) {
     error_code = error_code_;
     return false;
@@ -120,12 +119,6 @@ bool WhereClauseHelperDelete::Evaluate(Tuple *tuple,
 std::string WhereClauseHelperDelete::HandleColumnName(
     SqlNode *column_name) {
   std::vector<SqlNode *> children = column_name->Children();
-  if (children.size() != 1 && children.size() != 2) {
-    DEBUG_MSG("Column name has invalid number of children");
-    error_code_ = SqlErrors::INVALID_COLUMN_NAME;
-    return std::string();
-  }
-
   if (children.size() == 2 && table_name_ != children[0]->Data()) {
     DEBUG_MSG("WHERE clause contains invalid table name");
     error_code_ = SqlErrors::INVALID_TABLE_NAME;
@@ -146,20 +139,6 @@ std::string WhereClauseHelperDelete::HandleColumnName(
   }
 
   std::string field_value;
-  if (current_tuple_->getSchema().getFieldType(attribute_name) == INT) {
-    int value = current_tuple_->getField(attribute_name).integer;
-    field_value = std::to_string(value);
-    if (value == -1) {
-      field_value = "NULL";
-    }
-  } else if (current_tuple_->getSchema().getFieldType(
-        attribute_name) == STR20) {
-    field_value = *(current_tuple_->getField(attribute_name).str);
-  } else {
-    DEBUG_MSG("Column name invalid for the table");
-    error_code_ = SqlErrors::INVALID_COLUMN_NAME;
-    field_value = std::string();
-  }
-
+  ValueFromTuple(attribute_name, field_value, error_code_);
   return field_value;
 }

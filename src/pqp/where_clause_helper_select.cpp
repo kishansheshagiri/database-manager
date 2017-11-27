@@ -4,7 +4,8 @@
 #include "base/tokenizer.h"
 #include "storage/storage_adapter.h"
 
-WhereClauseHelperSelect::WhereClauseHelperSelect() {
+WhereClauseHelperSelect::WhereClauseHelperSelect()
+    : error_code_(SqlErrors::NO_ERROR) {
 }
 
 WhereClauseHelperSelect::~WhereClauseHelperSelect() {
@@ -26,8 +27,13 @@ bool WhereClauseHelperSelect::Evaluate(Tuple *tuple,
     return false;
   }
 
-  current_tuple_ = tuple;
-  return HandleSearchCondition();
+  bool condition_result = HandleSearchCondition(tuple);
+  if (error_code_ != SqlErrors::NO_ERROR) {
+    error_code = error_code_;
+    return false;
+  }
+
+  return condition_result;
 }
 
 bool WhereClauseHelperSelect::CanUseJoin(
@@ -45,8 +51,17 @@ bool WhereClauseHelperSelect::CanUseJoin(
 // Private methods
 std::string WhereClauseHelperSelect::HandleColumnName(
     SqlNode *column_name) {
-  DEBUG_MSG("NOT_IMPLEMENTED");
-  return std::string();
+  std::string column_name_string, table_name, attribute_name;
+  column_name->ColumnName(column_name_string);
+
+  Tokenizer::SplitIntoTwo(column_name_string, '.', table_name, attribute_name);
+  if (attribute_name.empty()) {
+    attribute_name = table_name;
+  }
+
+  std::string field_value;
+  ValueFromTuple(attribute_name, field_value, error_code_);
+  return field_value;
 }
 
 bool WhereClauseHelperSelect::isValidSearchCondition() const {
