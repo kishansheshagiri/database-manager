@@ -15,7 +15,7 @@ bool WhereClauseHelperSelect::Initialize(SqlNode *where_node,
     const std::vector<std::string> table_list) {
   table_list_ = table_list;
 
-  return WhereClauseHelper::Initialize(where_node);
+  return WhereClauseHelper::Initialize(where_node) && isValidSearchCondition();
 }
 
 bool WhereClauseHelperSelect::Evaluate(Tuple *tuple,
@@ -47,6 +47,91 @@ std::string WhereClauseHelperSelect::HandleColumnName(
     SqlNode *column_name) {
   DEBUG_MSG("NOT_IMPLEMENTED");
   return std::string();
+}
+
+bool WhereClauseHelperSelect::isValidSearchCondition() const {
+  for (auto boolean_term : RootNode()->Children()) {
+    if (!isValidBooleanTerm(boolean_term)) {
+      DEBUG_MSG("");
+      return false;
+    }
+  }
+
+  return true;
+}
+
+bool WhereClauseHelperSelect::isValidBooleanTerm(SqlNode *boolean_term) const {
+  for (auto boolean_factor : boolean_term->Children()) {
+    if (!isValidBooleanFactor(boolean_factor)) {
+      DEBUG_MSG("");
+      return false;
+    }
+  }
+
+  return true;
+}
+
+bool WhereClauseHelperSelect::isValidBooleanFactor(
+    SqlNode *boolean_factor) const {
+  for (auto expression : boolean_factor->Children()) {
+    if (!isValidExpression(expression)) {
+      DEBUG_MSG("");
+      return false;
+    }
+  }
+
+  return true;
+}
+
+bool WhereClauseHelperSelect::isValidExpression(SqlNode *expression) const {
+  for (auto term : expression->Children()) {
+    if (!isValidTerm(term)) {
+      DEBUG_MSG("");
+      return false;
+    }
+  }
+
+  return true;
+}
+
+bool WhereClauseHelperSelect::isValidTerm(SqlNode *term) const {
+  if (term->ChildrenCount() == 0) {
+    DEBUG_MSG("");
+    return true;
+  }
+
+  return isValidColumnName(term->Child(0));
+}
+
+bool WhereClauseHelperSelect::isValidColumnName(SqlNode *column_node) const {
+  if (table_list_.size() > 1 && column_node->ChildrenCount() == 1) {
+    DEBUG_MSG("");
+    return false;
+  }
+
+  std::string column_name;
+  if (!column_node->ColumnName(column_name)) {
+    DEBUG_MSG("");
+    return false;
+  }
+
+  std::string table_name, attribute_name;
+  Tokenizer::SplitIntoTwo(column_name, '.', table_name, attribute_name);
+  if (attribute_name.empty()) {
+    attribute_name = table_name;
+    table_name.clear();
+  }
+
+  auto table_position = std::find(
+      table_list_.begin(), table_list_.end(), table_name);
+  if (!table_name.empty() && table_position == table_list_.end()) {
+    DEBUG_MSG("");
+    return false;
+  }
+
+  table_name = *table_position;
+
+  return Storage()->IsValidColumnName(table_name, attribute_name);
 }
 
 bool WhereClauseHelperSelect::tryJoinBooleanTerm(SqlNode *boolean_term,

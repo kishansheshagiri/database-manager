@@ -27,6 +27,13 @@ class WhereClauseHelperSelect : public WhereClauseHelper {
  private:
   virtual std::string HandleColumnName(SqlNode *column_name) override;
 
+  bool isValidSearchCondition() const;
+  bool isValidBooleanTerm(SqlNode *boolean_term) const;
+  bool isValidBooleanFactor(SqlNode *boolean_factor) const;
+  bool isValidExpression(SqlNode *expression) const;
+  bool isValidTerm(SqlNode *term) const;
+  bool isValidColumnName(SqlNode *column_name) const;
+
   bool tryJoinBooleanTerm(SqlNode *boolean_term,
       JoinAttributes& join_attributes) const;
   bool tryJoinBooleanFactor(SqlNode *boolean_factor,
