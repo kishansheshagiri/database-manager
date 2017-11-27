@@ -127,8 +127,9 @@ bool StatementSelect::validateLists(SqlErrors::Type& error_code) const {
     }
   }
 
-  if (std::find(select_list_.begin(), select_list_.end(), sort_column_) ==
-      select_list_.end() && select_list_[0] != "*") {
+  if (table_list_.size() > 1 &&
+      std::find(select_list_.begin(), select_list_.end(), sort_column_) ==
+          select_list_.end() && select_list_[0] != "*") {
     ERROR_MSG("");
     error_code = SqlErrors::INVALID_SORT_ATTRIBUTE;
     return false;
