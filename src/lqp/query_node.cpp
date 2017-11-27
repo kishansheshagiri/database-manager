@@ -1,6 +1,7 @@
 #include "lqp/query_node.h"
 
 #include "base/debug.h"
+#include "pqp/where_clause_helper_select.h"
 
 QueryNode::QueryNode(QueryNodeType type)
     : type_(type) {
@@ -8,7 +9,10 @@ QueryNode::QueryNode(QueryNodeType type)
 
 QueryNode::~QueryNode() {
   for (auto child : children_) {
-    delete child;
+    if (child != nullptr) {
+      delete child;
+      child = nullptr;
+    }
   }
 }
 
@@ -59,4 +63,83 @@ QueryNode::QueryNodeType QueryNode::Type() const {
 
 void QueryNode::SetType(QueryNodeType type) {
   type_ = type;
+}
+
+void QueryNode::SetTableName(const std::string& table_name) {
+  if (type_ != QueryNode::QUERY_NODE_TYPE_TABLE_SCAN) {
+    DEBUG_MSG("");
+    return;
+  }
+
+  table_name_ = table_name;
+}
+
+void QueryNode::SetSortColumn(const std::string& sort_column) {
+  if (type_ != QueryNode::QUERY_NODE_TYPE_SORT) {
+    DEBUG_MSG("");
+    return;
+  }
+
+  sort_column_ = sort_column;
+}
+
+void QueryNode::SetSelectList(const std::vector<std::string>& select_list) {
+  if (type_ != QueryNode::QUERY_NODE_TYPE_PROJECTION) {
+    DEBUG_MSG("");
+    return;
+  }
+
+  select_list_ = select_list;
+}
+
+void QueryNode::SetWhereHelper(
+    WhereClauseHelperSelect *where_helper) {
+  if (type_ != QueryNode::QUERY_NODE_TYPE_SELECTION &&
+      type_ != QueryNode::QUERY_NODE_TYPE_NATURAL_JOIN) {
+    DEBUG_MSG("");
+    return;
+  }
+
+  where_helper_ = where_helper;
+}
+
+bool QueryNode::TableName(std::string& table_name) {
+  if (type_ != QueryNode::QUERY_NODE_TYPE_TABLE_SCAN) {
+    DEBUG_MSG("");
+    return false;
+  }
+
+  table_name = table_name_;
+  return true;
+}
+
+bool QueryNode::SortColumn(std::string& sort_column) {
+  if (type_ != QueryNode::QUERY_NODE_TYPE_SORT) {
+    DEBUG_MSG("");
+    return false;
+  }
+
+  sort_column = sort_column_;
+  return true;
+}
+
+bool QueryNode::SelectList(std::vector<std::string>& select_list) {
+  if (type_ != QueryNode::QUERY_NODE_TYPE_PROJECTION) {
+    DEBUG_MSG("");
+    return false;
+  }
+
+  select_list = select_list_;
+  return true;
+}
+
+bool QueryNode::WhereHelper(WhereClauseHelperSelect **helper) {
+  if (type_ != QueryNode::QUERY_NODE_TYPE_SELECTION &&
+      type_ != QueryNode::QUERY_NODE_TYPE_NATURAL_JOIN) {
+    DEBUG_MSG("");
+    return false;
+  }
+
+  *helper = where_helper_;
+  return true;
 }

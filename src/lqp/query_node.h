@@ -1,7 +1,10 @@
 #ifndef SRC_LQP_QUERY_NODE_H
 #define SRC_LQP_QUERY_NODE_H
 
+#include <string>
 #include <vector>
+
+class WhereClauseHelperSelect;
 
 class QueryNode {
  public:
@@ -31,8 +34,21 @@ class QueryNode {
   QueryNodeType Type() const;
   void SetType(QueryNodeType type);
 
+  void SetTableName(const std::string& table_name);
+  void SetSortColumn(const std::string& sort_column);
+  void SetSelectList(const std::vector<std::string>& select_list);
+  void SetWhereHelper(WhereClauseHelperSelect *where_helper);
+
+  bool TableName(std::string& table_name);
+  bool SortColumn(std::string& sort_column);
+  bool SelectList(std::vector<std::string>& select_list);
+  bool WhereHelper(WhereClauseHelperSelect **helper);
+
  private:
-  QueryNode();
+  std::string sort_column_;
+  std::string table_name_;
+  std::vector<std::string> select_list_;
+  WhereClauseHelperSelect *where_helper_;
 
   QueryNodeType type_;
   std::vector<QueryNode *> children_;

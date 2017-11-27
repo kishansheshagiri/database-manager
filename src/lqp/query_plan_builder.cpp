@@ -12,16 +12,26 @@ QueryPlanBuilder::QueryPlanBuilder(bool distinct,
       table_list_(table_list),
       where_node_(where_node),
       query_node_root_(nullptr) {
+  where_helper_ = new WhereClauseHelperSelect();
 }
 
 QueryPlanBuilder::~QueryPlanBuilder() {
-  delete query_node_root_;
+  if (query_node_root_) {
+    delete query_node_root_;
+    query_node_root_ = nullptr;
+  }
+
+  if (where_helper_) {
+    delete where_helper_;
+    where_helper_ = nullptr;
+  }
 }
 
 bool QueryPlanBuilder::Build() {
   QueryNode *sort_node = nullptr;
   if (!sort_column_.empty()) {
     sort_node = createNode(nullptr, QueryNode::QUERY_NODE_TYPE_SORT);
+    sort_node->SetSortColumn(sort_column_);
   }
 
   QueryNode *duplication_elimination_node = nullptr;
@@ -32,6 +42,7 @@ bool QueryPlanBuilder::Build() {
 
   QueryNode *projection_node = createNode(nullptr,
       QueryNode::QUERY_NODE_TYPE_PROJECTION);
+  projection_node->SetSelectList(select_list_);
 
   std::vector<QueryNode *> nodes = {
       sort_node,
@@ -45,19 +56,23 @@ bool QueryPlanBuilder::Build() {
   QueryNode *next_node = node_endings.second;
 
   if (where_node_ != nullptr &&
-      !where_helper_.Initialize(where_node_, table_list_)) {
+      !where_helper_->Initialize(where_node_, table_list_)) {
     DEBUG_MSG("");
     return false;
   }
 
   JoinAttributes join_attributes;
-  if (where_node_ != nullptr && where_helper_.CanUseJoin(join_attributes)) {
+  if (where_node_ != nullptr && where_helper_->CanUseJoin(join_attributes)) {
     DEBUG_MSG("NOT IMPLEMENTED");
     return false;
   }
 
+  QueryNode *selection_node = createNode(next_node,
+      QueryNode::QUERY_NODE_TYPE_SELECTION);
+  selection_node->SetWhereHelper(where_helper_);
+
   return createProducts(0, QueryNode::QUERY_NODE_TYPE_CROSS_PRODUCT,
-      projection_node);
+      selection_node);
 }
 
 QueryNode *QueryPlanBuilder::createNode(QueryNode *parent,
@@ -82,21 +97,19 @@ bool QueryPlanBuilder::createProducts(const int index,
     return false;
   }
 
-  if (parent->ChildrenCount() < 1 || (table_list_.size() == 1 && index == 0)) {
-    createNode(parent, QueryNode::QUERY_NODE_TYPE_TABLE_SCAN);
-    return createProducts(index + 1, product_type, parent);
-  } else if (parent->ChildrenCount() == 1) {
-    if (index == table_list_.size() - 1) {
-      createNode(parent, QueryNode::QUERY_NODE_TYPE_TABLE_SCAN);
-      return true;
-    } else {
-      return createProducts(index, product_type, createNode(parent,
-                                                            product_type));
-    }
-  } else {
-    DEBUG_MSG("");
-    return false;
+  if (index == table_list_.size() - 1) {
+    QueryNode *table_scan_node = createNode(parent,
+        QueryNode::QUERY_NODE_TYPE_TABLE_SCAN);
+    table_scan_node->SetTableName(table_list_[index]);
+    return true;
   }
+
+  QueryNode *product_node = createNode(parent, product_type);
+  QueryNode *table_scan_node = createNode(
+      product_node, QueryNode::QUERY_NODE_TYPE_TABLE_SCAN);
+  table_scan_node->SetTableName(table_list_[index]);
+
+  return createProducts(index + 1, product_type, product_node);
 }
 
 void QueryPlanBuilder::serializeNodes(std::vector<QueryNode *> nodes,

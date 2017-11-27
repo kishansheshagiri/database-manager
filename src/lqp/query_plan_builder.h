@@ -32,7 +32,7 @@ class QueryPlanBuilder {
   std::vector<std::string> table_list_;
   SqlNode *where_node_;
   QueryNode *query_node_root_;
-  WhereClauseHelperSelect where_helper_;
+  WhereClauseHelperSelect *where_helper_;
 };
 
 #endif // SRC_LQP_QUERY_PLAN_BUILDER_H
