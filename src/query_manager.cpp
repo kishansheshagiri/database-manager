@@ -50,4 +50,5 @@ void QueryManager::ExecuteQuery(SqlErrors::Type &error_code) {
   }
 
   statement->Execute(error_code);
+  delete sql_node;
 }

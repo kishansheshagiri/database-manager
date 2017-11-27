@@ -11,7 +11,12 @@ SqlNode::SqlNode(NodeType type, std::string data)
 }
 
 SqlNode::~SqlNode() {
-
+  for (auto child : children_) {
+    if (child != nullptr) {
+      delete child;
+      child = nullptr;
+    }
+  }
 }
 
 void SqlNode::AppendChild(SqlNode* child) {
