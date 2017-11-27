@@ -62,6 +62,11 @@ bool WhereClauseHelper::ValueFromTuple(const std::string attribute_name,
 // Private methods
 bool WhereClauseHelper::handleBooleanTerm(SqlNode *boolean_term) {
   std::vector<SqlNode *> children = boolean_term->Children();
+  // WhereClauseHelperSelect can remove children from BooleanTerm
+  if (children.size() == 0) {
+    return true;
+  }
+
   bool boolean_term_predicate = handleBooleanFactor(children[0]);
   for (int index = 1; index < children.size(); index++) {
     boolean_term_predicate = boolean_term_predicate &&

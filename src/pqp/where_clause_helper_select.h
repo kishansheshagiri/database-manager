@@ -22,7 +22,8 @@ class WhereClauseHelperSelect : public WhereClauseHelper {
       const std::vector<std::string> table_list);
   bool Evaluate(Tuple *tuple, SqlErrors::Type& error_code) override;
 
-  bool CanUseJoin(JoinAttributes& join_attributes) const;
+  void OptimizationCandidates(std::vector<SqlNode *>& boolean_factors,
+      JoinAttributes& join_attributes) const;
 
  private:
   virtual std::string HandleColumnName(SqlNode *column_name) override;
@@ -34,12 +35,14 @@ class WhereClauseHelperSelect : public WhereClauseHelper {
   bool isValidTerm(SqlNode *term) const;
   bool isValidColumnName(SqlNode *column_name) const;
 
-  bool tryJoinBooleanTerm(SqlNode *boolean_term,
+  void optimizationCandidatesBooleanTerm(SqlNode *boolean_term,
+      std::vector<SqlNode *>& boolean_factors,
       JoinAttributes& join_attributes) const;
-  bool tryJoinBooleanFactor(SqlNode *boolean_factor,
-      JoinAttributes& join_attributes) const;
+  void optimizationCandidatesBooleanFactor(
+      SqlNode *boolean_factor, JoinAttributes& join_attributes,
+      bool& joinable, bool& optimizable) const;
   bool tryJoinExpression(SqlNode *expression,
-      std::string& join_candidate) const;
+      std::string& join_candidate, bool& has_column) const;
 
   SqlErrors::Type error_code_;
   std::vector<std::string> table_list_;

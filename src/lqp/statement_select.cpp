@@ -127,7 +127,7 @@ bool StatementSelect::validateLists(SqlErrors::Type& error_code) const {
     }
   }
 
-  if (table_list_.size() > 1 &&
+  if (table_list_.size() > 1 && !sort_column_.empty() &&
       std::find(select_list_.begin(), select_list_.end(), sort_column_) ==
           select_list_.end() && select_list_[0] != "*") {
     ERROR_MSG("");

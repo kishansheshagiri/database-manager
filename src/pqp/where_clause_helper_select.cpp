@@ -38,16 +38,20 @@ bool WhereClauseHelperSelect::Evaluate(Tuple *tuple,
   return condition_result;
 }
 
-bool WhereClauseHelperSelect::CanUseJoin(
+void WhereClauseHelperSelect::OptimizationCandidates(
+    std::vector<SqlNode *>& boolean_factors,
     JoinAttributes& join_attributes) const {
-  if (RootNode()->ChildrenCount() > 1) {
+  boolean_factors.clear();
+  join_attributes.clear();
+
+  if (RootNode()->ChildrenCount() != 1) {
     DEBUG_MSG("");
-    return false;
+    return;
   }
 
-  join_attributes.clear();
   std::vector<SqlNode *> children = RootNode()->Children();
-  return tryJoinBooleanTerm(RootNode()->Child(0), join_attributes);
+  return optimizationCandidatesBooleanTerm(RootNode()->Child(0),
+      boolean_factors, join_attributes);
 }
 
 // Private methods
@@ -151,40 +155,58 @@ bool WhereClauseHelperSelect::isValidColumnName(SqlNode *column_node) const {
   return Storage()->IsValidColumnName(table_name, attribute_name);
 }
 
-bool WhereClauseHelperSelect::tryJoinBooleanTerm(SqlNode *boolean_term,
+void WhereClauseHelperSelect::optimizationCandidatesBooleanTerm(
+    SqlNode *boolean_term,
+    std::vector<SqlNode *>& boolean_factors,
     JoinAttributes& join_attributes) const {
+  bool joinable = true;
   std::vector<SqlNode *> children = boolean_term->Children();
-  bool joinable = tryJoinBooleanFactor(children[0], join_attributes);
-  for (int index = 1; index < children.size(); index++) {
-    joinable = joinable &&
-        tryJoinBooleanFactor(children[index], join_attributes);
+
+  for (auto boolean_factor : children) {
+    bool node_joinable = false;
+    bool node_optimizable = false;
+    optimizationCandidatesBooleanFactor(boolean_factor, join_attributes,
+        node_joinable, node_optimizable);
+    joinable = joinable && (node_joinable || node_optimizable);
+
+    if (node_optimizable) {
+      boolean_factors.push_back(boolean_factor);
+      boolean_term->RemoveChild(boolean_factor);
+    }
   }
 
-  return joinable;
+  if (!joinable) {
+    join_attributes.clear();
+  }
 }
 
-bool WhereClauseHelperSelect::tryJoinBooleanFactor(SqlNode *boolean_factor,
-    JoinAttributes& join_attributes) const {
-  if (boolean_factor->Data() != "=") {
-    DEBUG_MSG("");
-    return false;
+void WhereClauseHelperSelect::optimizationCandidatesBooleanFactor(
+    SqlNode *boolean_factor, JoinAttributes& join_attributes,
+    bool& joinable, bool& optimizable) const {
+  std::string join_candidate_left;
+  bool has_column_left = false;
+  bool left_joinable = tryJoinExpression(boolean_factor->Child(0),
+      join_candidate_left, has_column_left);
+
+  std::string join_candidate_right;
+  bool has_column_right = false;
+  bool right_joinable = tryJoinExpression(boolean_factor->Child(1),
+      join_candidate_right, has_column_right);
+
+  if (has_column_left != has_column_right) {
+    optimizable = true;
   }
 
-  std::string join_candidate_left;
-  bool left_joinable = tryJoinExpression(boolean_factor->Child(0),
-      join_candidate_left);
-  std::string join_candidate_right;
-  bool right_joinable = tryJoinExpression(boolean_factor->Child(1),
-      join_candidate_right);
-
-  if (!left_joinable || !right_joinable) {
+  if (boolean_factor->Data() != "=" ||
+      !left_joinable || !right_joinable) {
     DEBUG_MSG("");
-    return false;
+    return;
   }
 
   std::string table_name_left, attribute_name_left;
   Tokenizer::SplitIntoTwo(join_candidate_left, '.',
       table_name_left, attribute_name_left);
+
   std::string table_name_right, attribute_name_right;
   Tokenizer::SplitIntoTwo(join_candidate_right, '.',
       table_name_right, attribute_name_right);
@@ -192,7 +214,7 @@ bool WhereClauseHelperSelect::tryJoinBooleanFactor(SqlNode *boolean_factor,
   if (attribute_name_left != attribute_name_right ||
       table_name_left == table_name_right) {
     DEBUG_MSG("");
-    return false;
+    return;
   }
 
   FIELD_TYPE field_type_left;
@@ -204,17 +226,18 @@ bool WhereClauseHelperSelect::tryJoinBooleanFactor(SqlNode *boolean_factor,
 
   if (field_type_left != field_type_right) {
     DEBUG_MSG("");
-    return false;
+    return;
   }
 
   auto join_candidates = std::make_pair(join_candidate_left,
       join_candidate_right);
   join_attributes.push_back(join_candidates);
-  return true;
+
+  joinable = true;
 }
 
 bool WhereClauseHelperSelect::tryJoinExpression(SqlNode *expression,
-    std::string& join_candidate) const {
+    std::string& join_candidate, bool& has_column) const {
   if (expression->ChildrenCount() != 1) {
     DEBUG_MSG("");
     return false;
@@ -225,6 +248,8 @@ bool WhereClauseHelperSelect::tryJoinExpression(SqlNode *expression,
     DEBUG_MSG("");
     return false;
   }
+
+  has_column = true;
 
   SqlNode *column_name = term->Child(0);
   if (!column_name->ColumnName(join_candidate)) {

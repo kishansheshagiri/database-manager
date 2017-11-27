@@ -62,9 +62,10 @@ bool QueryPlanBuilder::Build() {
   }
 
   JoinAttributes join_attributes;
-  if (where_node_ != nullptr && where_helper_->CanUseJoin(join_attributes)) {
-    DEBUG_MSG("NOT IMPLEMENTED");
-    return false;
+  std::vector<SqlNode *> selection_push_candidates;
+  if (where_node_) {
+    where_helper_->OptimizationCandidates(selection_push_candidates,
+      join_attributes);
   }
 
   QueryNode *selection_node = createNode(next_node,
