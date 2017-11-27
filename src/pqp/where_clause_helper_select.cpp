@@ -1,5 +1,7 @@
 #include "pqp/where_clause_helper_select.h"
 
+#include <algorithm>
+
 #include "base/debug.h"
 #include "base/tokenizer.h"
 #include "storage/storage_adapter.h"

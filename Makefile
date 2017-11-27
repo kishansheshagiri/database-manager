@@ -7,7 +7,10 @@ VPATH = src \
 				storage_manager
 
 INCLUDEDIR = src
-CFLAGS += -std=c++14 -I. -I$(INCLUDEDIR) -Wno-static-float-init -DDEBUG
+CFLAGS += -std=c++14 \
+					-I. -I$(INCLUDEDIR) \
+					-fpermissive -Wno-static-float-init \
+					-DDEBUG
 CC = g++
 TARGET = database-manager
 OBJDIR = obj

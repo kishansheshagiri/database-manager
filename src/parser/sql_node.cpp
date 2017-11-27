@@ -1,5 +1,7 @@
 #include "parser/sql_node.h"
 
+#include <algorithm>
+
 #include "base/debug.h"
 #include "base/duplicate_finder.h"
 

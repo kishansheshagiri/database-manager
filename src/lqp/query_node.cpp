@@ -1,5 +1,7 @@
 #include "lqp/query_node.h"
 
+#include <algorithm>
+
 #include "base/debug.h"
 #include "pqp/where_clause_helper_select.h"
 
