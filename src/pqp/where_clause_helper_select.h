@@ -9,6 +9,7 @@
 #include "pqp/where_clause_helper.h"
 #include "storage/storage_manager_headers.h"
 
+typedef std::vector<std::pair<std::string, SqlNode *> > PushCandidates;
 typedef std::vector<std::pair<std::string, std::string> > JoinAttributes;
 
 class StorageAdapter;
@@ -21,8 +22,10 @@ class WhereClauseHelperSelect : public WhereClauseHelper {
   bool Initialize(SqlNode *where_node,
       const std::vector<std::string> table_list);
   bool Evaluate(Tuple *tuple, SqlErrors::Type& error_code) override;
+  bool HandleBooleanFactor(SqlNode *boolean_factor) override;
 
-  void OptimizationCandidates(std::vector<SqlNode *>& boolean_factors,
+  void OptimizationCandidates(
+      PushCandidates& push_candidates,
       JoinAttributes& join_attributes) const;
 
  private:
@@ -36,11 +39,12 @@ class WhereClauseHelperSelect : public WhereClauseHelper {
   bool isValidColumnName(SqlNode *column_name) const;
 
   void optimizationCandidatesBooleanTerm(SqlNode *boolean_term,
-      std::vector<SqlNode *>& boolean_factors,
+      PushCandidates& push_candidates,
       JoinAttributes& join_attributes) const;
   void optimizationCandidatesBooleanFactor(
       SqlNode *boolean_factor, JoinAttributes& join_attributes,
-      bool& joinable, bool& optimizable) const;
+      bool& joinable, bool& optimizable,
+      std::string& optimizable_table_name) const;
   bool tryJoinExpression(SqlNode *expression,
       std::string& join_candidate, bool& has_column) const;
 

@@ -62,9 +62,9 @@ bool QueryPlanBuilder::Build() {
   }
 
   JoinAttributes join_attributes;
-  std::vector<SqlNode *> selection_push_candidates;
+  PushCandidates push_candidates;
   if (where_node_) {
-    where_helper_->OptimizationCandidates(selection_push_candidates,
+    where_helper_->OptimizationCandidates(push_candidates,
       join_attributes);
   }
 

@@ -67,16 +67,16 @@ bool WhereClauseHelper::handleBooleanTerm(SqlNode *boolean_term) {
     return true;
   }
 
-  bool boolean_term_predicate = handleBooleanFactor(children[0]);
+  bool boolean_term_predicate = HandleBooleanFactor(children[0]);
   for (int index = 1; index < children.size(); index++) {
     boolean_term_predicate = boolean_term_predicate &&
-        handleBooleanFactor(children[index]);
+        HandleBooleanFactor(children[index]);
   }
 
   return boolean_term_predicate;
 }
 
-bool WhereClauseHelper::handleBooleanFactor(
+bool WhereClauseHelper::HandleBooleanFactor(
     SqlNode *boolean_factor) {
   std::string expression_left = handleExpression(boolean_factor->Child(0));
   std::string expression_right = handleExpression(boolean_factor->Child(1));

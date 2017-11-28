@@ -38,10 +38,14 @@ bool WhereClauseHelperSelect::Evaluate(Tuple *tuple,
   return condition_result;
 }
 
+bool WhereClauseHelperSelect::HandleBooleanFactor(SqlNode *boolean_factor) {
+  return WhereClauseHelper::HandleBooleanFactor(boolean_factor);
+}
+
 void WhereClauseHelperSelect::OptimizationCandidates(
-    std::vector<SqlNode *>& boolean_factors,
+    PushCandidates& push_candidates,
     JoinAttributes& join_attributes) const {
-  boolean_factors.clear();
+  push_candidates.clear();
   join_attributes.clear();
 
   if (RootNode()->ChildrenCount() != 1) {
@@ -51,7 +55,7 @@ void WhereClauseHelperSelect::OptimizationCandidates(
 
   std::vector<SqlNode *> children = RootNode()->Children();
   return optimizationCandidatesBooleanTerm(RootNode()->Child(0),
-      boolean_factors, join_attributes);
+      push_candidates, join_attributes);
 }
 
 // Private methods
@@ -157,7 +161,7 @@ bool WhereClauseHelperSelect::isValidColumnName(SqlNode *column_node) const {
 
 void WhereClauseHelperSelect::optimizationCandidatesBooleanTerm(
     SqlNode *boolean_term,
-    std::vector<SqlNode *>& boolean_factors,
+    PushCandidates& push_candidates,
     JoinAttributes& join_attributes) const {
   bool joinable = true;
   std::vector<SqlNode *> children = boolean_term->Children();
@@ -165,12 +169,14 @@ void WhereClauseHelperSelect::optimizationCandidatesBooleanTerm(
   for (auto boolean_factor : children) {
     bool node_joinable = false;
     bool node_optimizable = false;
+    std::string optimizable_table_name;
     optimizationCandidatesBooleanFactor(boolean_factor, join_attributes,
-        node_joinable, node_optimizable);
+        node_joinable, node_optimizable, optimizable_table_name);
     joinable = joinable && (node_joinable || node_optimizable);
 
     if (node_optimizable) {
-      boolean_factors.push_back(boolean_factor);
+      push_candidates.push_back(std::make_pair(
+          optimizable_table_name, boolean_factor));
       boolean_term->RemoveChild(boolean_factor);
     }
   }
@@ -182,7 +188,8 @@ void WhereClauseHelperSelect::optimizationCandidatesBooleanTerm(
 
 void WhereClauseHelperSelect::optimizationCandidatesBooleanFactor(
     SqlNode *boolean_factor, JoinAttributes& join_attributes,
-    bool& joinable, bool& optimizable) const {
+    bool& joinable,
+    bool& optimizable, std::string& optimizable_table_name) const {
   std::string join_candidate_left;
   bool has_column_left = false;
   bool left_joinable = tryJoinExpression(boolean_factor->Child(0),
@@ -195,6 +202,8 @@ void WhereClauseHelperSelect::optimizationCandidatesBooleanFactor(
 
   if (has_column_left != has_column_right) {
     optimizable = true;
+    optimizable_table_name =
+        has_column_left ? join_candidate_left : join_candidate_right;
   }
 
   if (boolean_factor->Data() != "=" ||
