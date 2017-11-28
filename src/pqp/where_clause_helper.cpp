@@ -17,7 +17,8 @@ bool WhereClauseHelper::Initialize(SqlNode *where_node) {
     return false;
   }
 
-  if (where_node->Type() != SqlNode::NODE_TYPE_SEARCH_CONDITION) {
+  if (where_node->Type() != SqlNode::NODE_TYPE_SEARCH_CONDITION &&
+      where_node->Type() != SqlNode::NODE_TYPE_BOOLEAN_FACTOR) {
     DEBUG_MSG("Invalid node, check WHERE node type");
     return false;
   }
@@ -67,17 +68,21 @@ bool WhereClauseHelper::handleBooleanTerm(SqlNode *boolean_term) {
     return true;
   }
 
-  bool boolean_term_predicate = HandleBooleanFactor(children[0]);
+  bool boolean_term_predicate = HandleBooleanFactor(nullptr, children[0]);
   for (int index = 1; index < children.size(); index++) {
     boolean_term_predicate = boolean_term_predicate &&
-        HandleBooleanFactor(children[index]);
+        HandleBooleanFactor(nullptr, children[index]);
   }
 
   return boolean_term_predicate;
 }
 
-bool WhereClauseHelper::HandleBooleanFactor(
+bool WhereClauseHelper::HandleBooleanFactor(Tuple *tuple,
     SqlNode *boolean_factor) {
+  if (tuple) {
+    current_tuple_ = tuple;
+  }
+
   std::string expression_left = handleExpression(boolean_factor->Child(0));
   std::string expression_right = handleExpression(boolean_factor->Child(1));
 

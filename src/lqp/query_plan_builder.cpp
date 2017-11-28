@@ -1,6 +1,9 @@
 #include "lqp/query_plan_builder.h"
 
+#include <utility>
+
 #include "base/debug.h"
+#include "base/tokenizer.h"
 
 QueryPlanBuilder::QueryPlanBuilder(bool distinct,
     std::string sort_column,
@@ -12,7 +15,8 @@ QueryPlanBuilder::QueryPlanBuilder(bool distinct,
       table_list_(table_list),
       where_node_(where_node),
       query_node_root_(nullptr) {
-  where_helper_ = new WhereClauseHelperSelect();
+  where_helper_ = new WhereClauseHelperSelect(
+      WhereClauseHelperSelect::WHERE_CLAUSE_HELPER_TYPE_WHERE);
 }
 
 QueryPlanBuilder::~QueryPlanBuilder() {
@@ -72,8 +76,18 @@ bool QueryPlanBuilder::Build() {
       QueryNode::QUERY_NODE_TYPE_SELECTION);
   selection_node->SetWhereHelper(where_helper_);
 
-  return createProducts(0, QueryNode::QUERY_NODE_TYPE_CROSS_PRODUCT,
-      selection_node);
+  if (!createProducts(0, QueryNode::QUERY_NODE_TYPE_CROSS_PRODUCT,
+      selection_node, push_candidates)) {
+    DEBUG_MSG("Failed to create products");
+    return false;
+  }
+
+  if (push_candidates.size() != 0) {
+    DEBUG_MSG("Push candidates not empty");
+    return false;
+  }
+
+  return true;
 }
 
 QueryNode *QueryPlanBuilder::createNode(QueryNode *parent,
@@ -88,7 +102,8 @@ QueryNode *QueryPlanBuilder::createNode(QueryNode *parent,
 }
 
 bool QueryPlanBuilder::createProducts(const int index,
-    const QueryNode::QueryNodeType product_type, QueryNode *parent) {
+    const QueryNode::QueryNodeType product_type, QueryNode *parent,
+    PushCandidates& push_candidates) {
   if (index >= table_list_.size()) {
     return true;
   } else if (index < 0 ||
@@ -99,18 +114,67 @@ bool QueryPlanBuilder::createProducts(const int index,
   }
 
   if (index == table_list_.size() - 1) {
-    QueryNode *table_scan_node = createNode(parent,
+    std::pair<QueryNode *, QueryNode *> node_endings = std::make_pair(
+        nullptr, nullptr);
+    createPushCandidateNodes(push_candidates, table_list_[index], node_endings);
+    if (node_endings.first != nullptr) {
+      parent->AppendChild(node_endings.first);
+    }
+
+    QueryNode *next_child = node_endings.first == nullptr ?
+        parent : node_endings.second;
+
+    QueryNode *table_scan_node = createNode(next_child,
         QueryNode::QUERY_NODE_TYPE_TABLE_SCAN);
     table_scan_node->SetTableName(table_list_[index]);
     return true;
   }
 
   QueryNode *product_node = createNode(parent, product_type);
+
+  std::pair<QueryNode *, QueryNode *> node_endings = std::make_pair(
+      nullptr, nullptr);
+  createPushCandidateNodes(push_candidates, table_list_[index], node_endings);
+  if (node_endings.first != nullptr) {
+    product_node->AppendChild(node_endings.first);
+  }
+
+  QueryNode *next_child = node_endings.first == nullptr ?
+      parent : node_endings.second;
+
   QueryNode *table_scan_node = createNode(
-      product_node, QueryNode::QUERY_NODE_TYPE_TABLE_SCAN);
+      next_child, QueryNode::QUERY_NODE_TYPE_TABLE_SCAN);
   table_scan_node->SetTableName(table_list_[index]);
 
-  return createProducts(index + 1, product_type, product_node);
+  return createProducts(index + 1, product_type, product_node, push_candidates);
+}
+
+void QueryPlanBuilder::createPushCandidateNodes(PushCandidates& push_candidates,
+    const std::string table_name,
+    std::pair<QueryNode *, QueryNode *>& node_endings) {
+  auto push_index = push_candidates.begin();
+  std::vector<QueryNode *> push_candidate_nodes;
+
+  while (push_index != push_candidates.end()) {
+    std::string candidate_table_name, candidate_attribute_name;
+    Tokenizer::SplitIntoTwo((*push_index).first, '.',
+        candidate_table_name, candidate_attribute_name);
+    if (candidate_table_name == table_name) {
+      QueryNode *push_candidate_node = createNode(nullptr,
+          QueryNode::QUERY_NODE_TYPE_SELECTION);
+      WhereClauseHelperSelect *where_helper = new WhereClauseHelperSelect(
+          WhereClauseHelperSelect::WHERE_CLAUSE_HELPER_TYPE_BOOLEAN_FACTOR);
+      std::vector<std::string> table_list;
+      where_helper->Initialize((*push_index).second, table_list);
+      push_candidate_node->SetWhereHelper(where_helper);
+      push_candidate_nodes.push_back(push_candidate_node);
+      push_index = push_candidates.erase(push_index);
+    } else {
+      push_index++;
+    }
+  }
+
+  serializeNodes(push_candidate_nodes, node_endings);
 }
 
 void QueryPlanBuilder::serializeNodes(std::vector<QueryNode *> nodes,

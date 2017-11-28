@@ -6,8 +6,9 @@
 #include "base/tokenizer.h"
 #include "storage/storage_adapter.h"
 
-WhereClauseHelperSelect::WhereClauseHelperSelect()
-    : error_code_(SqlErrors::NO_ERROR) {
+WhereClauseHelperSelect::WhereClauseHelperSelect(HelperType type)
+    : type_(type),
+      error_code_(SqlErrors::NO_ERROR) {
 }
 
 WhereClauseHelperSelect::~WhereClauseHelperSelect() {
@@ -18,7 +19,14 @@ bool WhereClauseHelperSelect::Initialize(SqlNode *where_node,
     const std::vector<std::string> table_list) {
   table_list_ = table_list;
 
-  return WhereClauseHelper::Initialize(where_node) && isValidSearchCondition();
+  bool return_value = WhereClauseHelper::Initialize(where_node);
+  if (type_ == WhereClauseHelperSelect::WHERE_CLAUSE_HELPER_TYPE_WHERE &&
+      !isValidSearchCondition()) {
+    DEBUG_MSG("");
+    return false;
+  }
+
+  return return_value;
 }
 
 bool WhereClauseHelperSelect::Evaluate(Tuple *tuple,
@@ -29,17 +37,20 @@ bool WhereClauseHelperSelect::Evaluate(Tuple *tuple,
     return false;
   }
 
-  bool condition_result = HandleSearchCondition(tuple);
+  bool condition_result;
+  if (type_ == WhereClauseHelperSelect::WHERE_CLAUSE_HELPER_TYPE_WHERE) {
+    condition_result = HandleSearchCondition(tuple);
+  } else if (type_ ==
+      WhereClauseHelperSelect::WHERE_CLAUSE_HELPER_TYPE_BOOLEAN_FACTOR) {
+    condition_result = HandleBooleanFactor(tuple, RootNode());
+  }
+
   if (error_code_ != SqlErrors::NO_ERROR) {
     error_code = error_code_;
     return false;
   }
 
   return condition_result;
-}
-
-bool WhereClauseHelperSelect::HandleBooleanFactor(SqlNode *boolean_factor) {
-  return WhereClauseHelper::HandleBooleanFactor(boolean_factor);
 }
 
 void WhereClauseHelperSelect::OptimizationCandidates(

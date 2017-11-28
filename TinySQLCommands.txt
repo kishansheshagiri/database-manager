@@ -20,4 +20,5 @@ INSERT INTO course2 (sid, exam, grade) VALUES (1, 100, "E")
 SELECT * FROM course2
 SELECT * FROM course, course2 WHERE course.sid = course2.sid ORDER BY course.exam
 SELECT * FROM course, course2 WHERE course.sid = course2.exam
+SELECT * FROM course, course2 WHERE course.sid = course2.exam AND course.sid < 2
 INSERT INTO course (sid, homework, project, exam, grade) SELECT * FROM course

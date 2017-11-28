@@ -20,7 +20,8 @@ class WhereClauseHelper {
 
   virtual std::string HandleColumnName(SqlNode *column_name) = 0;
   bool HandleSearchCondition(Tuple *tuple);
-  virtual bool HandleBooleanFactor(SqlNode *boolean_factor);
+  virtual bool HandleBooleanFactor(Tuple *tuple,
+      SqlNode *boolean_factor);
   bool ValueFromTuple(const std::string attribute_name,
       std::string& field_value, SqlErrors::Type& error_code);
 

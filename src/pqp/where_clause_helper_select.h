@@ -16,13 +16,17 @@ class StorageAdapter;
 
 class WhereClauseHelperSelect : public WhereClauseHelper {
  public:
-  WhereClauseHelperSelect();
+  enum HelperType {
+    WHERE_CLAUSE_HELPER_TYPE_WHERE = 0,
+    WHERE_CLAUSE_HELPER_TYPE_BOOLEAN_FACTOR
+  };
+
+  WhereClauseHelperSelect(HelperType type);
   ~WhereClauseHelperSelect();
 
   bool Initialize(SqlNode *where_node,
       const std::vector<std::string> table_list);
   bool Evaluate(Tuple *tuple, SqlErrors::Type& error_code) override;
-  bool HandleBooleanFactor(SqlNode *boolean_factor) override;
 
   void OptimizationCandidates(
       PushCandidates& push_candidates,
@@ -48,6 +52,7 @@ class WhereClauseHelperSelect : public WhereClauseHelper {
   bool tryJoinExpression(SqlNode *expression,
       std::string& join_candidate, bool& has_column) const;
 
+  HelperType type_;
   SqlErrors::Type error_code_;
   std::vector<std::string> table_list_;
 };

@@ -21,8 +21,12 @@ class QueryPlanBuilder {
   QueryNode *createNode(QueryNode *parent,
       const QueryNode::QueryNodeType product_type);
   bool createProducts(const int index,
-      const QueryNode::QueryNodeType product_type, QueryNode *parent);
+      const QueryNode::QueryNodeType product_type, QueryNode *parent,
+      PushCandidates& push_candidates);
 
+  void createPushCandidateNodes(PushCandidates& push_candidates,
+      const std::string table_name,
+      std::pair<QueryNode *, QueryNode *>& node_endings);
   void serializeNodes(std::vector<QueryNode *> nodes,
       std::pair<QueryNode *, QueryNode *>& node_endings) const;
 
