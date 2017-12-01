@@ -14,8 +14,6 @@ class QueryRunnerProjection : public QueryRunner {
 
  private:
   bool headers_printed_;
-  QueryRunner *child_runner_;
-  QueryResultCallback callback_;
 };
 
 #endif // SRC_PQP_QUERY_RUNNER_PROJECTION_H

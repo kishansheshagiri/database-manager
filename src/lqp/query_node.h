@@ -42,7 +42,7 @@ class QueryNode {
   bool TableName(std::string& table_name);
   bool SortColumn(std::string& sort_column);
   bool SelectList(std::vector<std::string>& select_list);
-  bool WhereHelper(WhereClauseHelperSelect **helper);
+  bool WhereHelper(WhereClauseHelperSelect *&helper);
 
  private:
   std::string sort_column_;

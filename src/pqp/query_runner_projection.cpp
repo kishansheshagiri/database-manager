@@ -8,15 +8,10 @@
 
 QueryRunnerProjection::QueryRunnerProjection(QueryNode *query_node)
   : QueryRunner(query_node),
-    headers_printed_(false),
-    child_runner_(nullptr) {
+    headers_printed_(false) {
 }
 
 QueryRunnerProjection::~QueryRunnerProjection() {
-  if (child_runner_) {
-    delete child_runner_;
-    child_runner_ = nullptr;
-  }
 }
 
 bool QueryRunnerProjection::Run(QueryResultCallback callback,
@@ -27,12 +22,12 @@ bool QueryRunnerProjection::Run(QueryResultCallback callback,
     return false;
   }
 
-  callback_ = callback;
+  SetCallback(callback);
 
   QueryNode *child_node = Node()->Child(0);
-  child_runner_ = Create(child_node);
+  SetChildRunner(Create(child_node));
 
-  return child_runner_->Run(
+  return ChildRunner()->Run(
       std::bind(&QueryRunnerProjection::ResultCallback,
           this, std::placeholders::_1, std::placeholders::_2),
       error_code);
@@ -66,7 +61,7 @@ bool QueryRunnerProjection::ResultCallback(std::vector<Tuple>& tuples,
     }
 
     std::vector<Tuple> header_tuples = { header_tuple };
-    if (!callback_(header_tuples, true)) {
+    if (!Callback()(header_tuples, true)) {
       DEBUG_MSG("");
       return false;
     }
@@ -105,7 +100,7 @@ bool QueryRunnerProjection::ResultCallback(std::vector<Tuple>& tuples,
     output_tuples.push_back(output_tuple);
   }
 
-  if (!callback_(output_tuples, false)) {
+  if (!Callback()(output_tuples, false)) {
     DEBUG_MSG("");
     return false;
   }

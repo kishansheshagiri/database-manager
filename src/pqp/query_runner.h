@@ -13,7 +13,7 @@ typedef std::function<bool(std::vector<Tuple>&, bool headers)> QueryResultCallba
 class QueryRunner {
  public:
   QueryRunner(QueryNode *query_node);
-  virtual ~QueryRunner() {}
+  virtual ~QueryRunner();
 
   bool Start(SqlErrors::Type& error_code);
   bool Print(std::vector<Tuple>& tuples, bool headers);
@@ -25,13 +25,21 @@ class QueryRunner {
  protected:
   QueryNode *Node() const { return query_node_; }
   StorageAdapter *Storage() const { return storage_adapter_; }
+  QueryRunner *ChildRunner() const { return child_runner_; }
+  QueryResultCallback Callback() const { return callback_; }
+
+  void SetChildRunner(QueryRunner *child_runner);
+  void SetCallback(QueryResultCallback callback);
+
   QueryRunner *Create(QueryNode *child_node);
 
  private:
   void printClose();
 
-  QueryNode *query_node_;
   int fields_printed_;
+  QueryNode *query_node_;
+  QueryRunner *child_runner_;
+  QueryResultCallback callback_;
   StorageAdapter *storage_adapter_;
 };
 

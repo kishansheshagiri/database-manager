@@ -135,13 +135,13 @@ bool QueryNode::SelectList(std::vector<std::string>& select_list) {
   return true;
 }
 
-bool QueryNode::WhereHelper(WhereClauseHelperSelect **helper) {
+bool QueryNode::WhereHelper(WhereClauseHelperSelect *&helper) {
   if (type_ != QueryNode::QUERY_NODE_TYPE_SELECTION &&
       type_ != QueryNode::QUERY_NODE_TYPE_NATURAL_JOIN) {
     DEBUG_MSG("");
     return false;
   }
 
-  *helper = where_helper_;
+  helper = where_helper_;
   return true;
 }

@@ -7,7 +7,15 @@
 
 QueryRunner::QueryRunner(QueryNode *query_node)
   : query_node_(query_node),
+    child_runner_(nullptr),
     storage_adapter_(StorageAdapter::Get()) {
+}
+
+QueryRunner::~QueryRunner() {
+  if (child_runner_ != nullptr) {
+    delete child_runner_;
+    child_runner_ = nullptr;
+  }
 }
 
 bool QueryRunner::Start(SqlErrors::Type& error_code) {
@@ -55,6 +63,14 @@ bool QueryRunner::Print(std::vector<Tuple>& tuples, bool headers) {
   }
 
   return true;
+}
+
+void QueryRunner::SetChildRunner(QueryRunner *child_runner) {
+  child_runner_ = child_runner;
+}
+
+void QueryRunner::SetCallback(QueryResultCallback callback) {
+  callback_ = callback;
 }
 
 QueryRunner *QueryRunner::Create(QueryNode *child_node) {
