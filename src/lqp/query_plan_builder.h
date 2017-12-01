@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 
+#include "base/sql_errors.h"
 #include "lqp/query_node.h"
 #include "parser/sql_node.h"
 #include "pqp/where_clause_helper_select.h"
@@ -15,7 +16,7 @@ class QueryPlanBuilder {
       std::vector<std::string> table_list, SqlNode *where_node);
   virtual ~QueryPlanBuilder();
 
-  bool Build();
+  bool Build(SqlErrors::Type& error_code);
 
  private:
   QueryNode *createNode(QueryNode *parent,

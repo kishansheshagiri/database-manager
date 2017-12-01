@@ -104,6 +104,50 @@ bool StorageAdapter::DeleteRelation(const std::string& name) const {
   return schema_manager_->deleteRelation(name);
 }
 
+Tuple StorageAdapter::CreateTuple(const std::string& relation_name,
+    const std::vector<std::string>& values, bool& created) const {
+  Relation *relation = schema_manager_->getRelation(relation_name);
+  if (relation == nullptr) {
+    DEBUG_MSG("Invalid relation name");
+    created = false;
+    return Tuple::getDummyTuple();
+  }
+
+  Schema schema = relation->getSchema();
+  if (values.size() != schema.getNumOfFields()) {
+    return Tuple::getDummyTuple();
+  }
+
+  int offset = 0;
+  Tuple tuple = relation->createTuple();
+  for (auto value : values) {
+    if (!MatchFieldType(schema, offset, values[offset])) {
+      DEBUG_MSG("");
+      created = false;
+      return Tuple::getDummyTuple();
+    }
+
+    if (schema.getFieldType(offset) == INT &&
+        !tuple.setField(offset, std::stoi(values[offset]))) {
+      DEBUG_MSG("Invalid values for relation");
+      created = false;
+      return Tuple::getDummyTuple();
+    }
+
+    if (schema.getFieldType(offset) == STR20 &&
+        !tuple.setField(offset, values[offset])) {
+      DEBUG_MSG("Invalid values for relation");
+      created = false;
+      return Tuple::getDummyTuple();
+    }
+
+    offset++;
+  }
+
+  created = true;
+  return tuple;
+}
+
 bool StorageAdapter::CreateTupleAndAppend(const std::string& relation_name,
     const std::vector<std::string>& values) const {
   Relation *relation = schema_manager_->getRelation(relation_name);
@@ -112,29 +156,11 @@ bool StorageAdapter::CreateTupleAndAppend(const std::string& relation_name,
     return false;
   }
 
-  Schema schema = relation->getSchema();
-  if (values.size() != schema.getNumOfFields()) {
-    DEBUG_MSG("Inserted list of values is empty");
+  bool tuple_created = false;
+  Tuple tuple = CreateTuple(relation_name, values, tuple_created);
+  if (!tuple_created) {
+    DEBUG_MSG("");
     return false;
-  }
-
-  int offset = 0;
-  Tuple tuple = relation->createTuple();
-  for (auto value : values) {
-    if (!MatchFieldType(schema, offset, values[offset])) {
-      return false;
-    }
-
-    if (schema.getFieldType(offset) == INT &&
-        !tuple.setField(offset, std::stoi(values[offset]))) {
-      DEBUG_MSG("Invalid values for relation");
-      return false;
-    } else if (!tuple.setField(offset, values[offset])) {
-      DEBUG_MSG("Invalid values for relation");
-      return false;
-    }
-
-    offset++;
   }
 
   appendTupleToRelation(relation, tuple);

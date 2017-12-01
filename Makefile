@@ -21,6 +21,9 @@ SOURCES = StorageManager.cpp \
 					query_manager.cpp \
 					query_node.cpp \
 					query_plan_builder.cpp \
+					query_runner.cpp \
+					query_runner_factory.cpp \
+					query_runner_projection.cpp \
 					sql_errors.cpp \
 					sql_node.cpp \
 					sql_parser.cpp \

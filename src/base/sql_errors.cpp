@@ -44,6 +44,30 @@ std::ostream &operator <<(std::ostream &out, const SqlErrors::Type type) {
     case SqlErrors::INVALID_SORT_ATTRIBUTE:
       out << "Sort column is invalid";
       break;
+    case SqlErrors::WHERE_CLAUSE_ERROR:
+      out << "Error processing WHERE condition";
+      break;
+    case SqlErrors::ERROR_TABLE_SCAN:
+      out << "Error reading table contents";
+      break;
+    case SqlErrors::ERROR_SORT:
+      out << "Error in sorting step";
+      break;
+    case SqlErrors::ERROR_DUPLICATE_ELIMINATION:
+      out << "Error in removing duplicate elements";
+      break;
+    case SqlErrors::ERROR_PROJECTION:
+      out << "Error in handling projection step";
+      break;
+    case SqlErrors::ERROR_SELECTION:
+      out << "Error in handling selection step";
+      break;
+    case SqlErrors::ERROR_CROSS_PRODUCT:
+      out << "Error in calculating product table";
+      break;
+    case SqlErrors::ERROR_NATURAL_JOIN:
+      out << "Error in handling join step";
+      break;
     case SqlErrors::INEXISTENT_TABLE:
       out << "Table does not exist";
       break;

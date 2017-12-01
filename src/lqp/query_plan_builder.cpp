@@ -31,7 +31,7 @@ QueryPlanBuilder::~QueryPlanBuilder() {
   }
 }
 
-bool QueryPlanBuilder::Build() {
+bool QueryPlanBuilder::Build(SqlErrors::Type& error_code) {
   QueryNode *sort_node = nullptr;
   if (!sort_column_.empty()) {
     sort_node = createNode(nullptr, QueryNode::QUERY_NODE_TYPE_SORT);
@@ -62,6 +62,7 @@ bool QueryPlanBuilder::Build() {
   if (where_node_ != nullptr &&
       !where_helper_->Initialize(where_node_, table_list_)) {
     DEBUG_MSG("");
+    error_code = SqlErrors::INVALID_SEARCH_CONDITION;
     return false;
   }
 
@@ -79,11 +80,13 @@ bool QueryPlanBuilder::Build() {
   if (!createProducts(0, QueryNode::QUERY_NODE_TYPE_CROSS_PRODUCT,
       selection_node, push_candidates)) {
     DEBUG_MSG("Failed to create products");
+    error_code = SqlErrors::WHERE_CLAUSE_ERROR;
     return false;
   }
 
   if (push_candidates.size() != 0) {
     DEBUG_MSG("Push candidates not empty");
+    error_code = SqlErrors::WHERE_CLAUSE_ERROR;
     return false;
   }
 

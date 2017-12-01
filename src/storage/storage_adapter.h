@@ -19,6 +19,8 @@ class StorageAdapter {
                       const std::vector<std::string>& fields,
                       const std::vector<enum FIELD_TYPE>& field_types) const;
   bool DeleteRelation(const std::string& name) const;
+  Tuple CreateTuple(const std::string& relation_name,
+      const std::vector<std::string>& values, bool& created) const;
   bool CreateTupleAndAppend(const std::string& relation_name,
       const std::vector<std::string>& values) const;
   bool CreateTupleAndAppend(const std::string& relation_name,

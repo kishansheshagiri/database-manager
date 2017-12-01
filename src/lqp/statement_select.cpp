@@ -80,9 +80,8 @@ void StatementSelect::Execute(SqlErrors::Type& error_code) {
 
   QueryPlanBuilder query_plan_builder(distinct_, sort_column_,
       select_list_, table_list_, where_node_);
-  if (!query_plan_builder.Build()) {
+  if (!query_plan_builder.Build(error_code)) {
     DEBUG_MSG("");
-    error_code = SqlErrors::INVALID_SEARCH_CONDITION;
     return;
   }
 
