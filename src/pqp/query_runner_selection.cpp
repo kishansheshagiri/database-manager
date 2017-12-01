@@ -59,7 +59,7 @@ bool QueryRunnerSelection::ResultCallback(std::vector<Tuple>& tuples,
     }
   }
 
-  if (!Callback()(tuples, false)) {
+  if (!Callback()(tuples, headers)) {
     DEBUG_MSG("");
     return false;
   }

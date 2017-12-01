@@ -11,9 +11,6 @@ class QueryRunnerProjection : public QueryRunner {
 
   bool Run(QueryResultCallback callback, SqlErrors::Type& error_code) final;
   bool ResultCallback(std::vector<Tuple>& tuples, bool headers) final;
-
- private:
-  bool headers_printed_;
 };
 
 #endif // SRC_PQP_QUERY_RUNNER_PROJECTION_H
