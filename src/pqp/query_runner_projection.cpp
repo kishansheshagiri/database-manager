@@ -8,6 +8,7 @@
 
 QueryRunnerProjection::QueryRunnerProjection(QueryNode *query_node)
   : QueryRunner(query_node),
+    headers_printed_(false),
     child_runner_(nullptr) {
 }
 
@@ -33,11 +34,12 @@ bool QueryRunnerProjection::Run(QueryResultCallback callback,
 
   return child_runner_->Run(
       std::bind(&QueryRunnerProjection::ResultCallback,
-          this, std::placeholders::_1),
+          this, std::placeholders::_1, std::placeholders::_2),
       error_code);
 }
 
-bool QueryRunnerProjection::ResultCallback(std::vector<Tuple>& tuples) {
+bool QueryRunnerProjection::ResultCallback(std::vector<Tuple>& tuples,
+    bool headers) {
   std::vector<std::string> select_list;
   if (!Node()->SelectList(select_list)) {
     DEBUG_MSG("");
@@ -52,6 +54,24 @@ bool QueryRunnerProjection::ResultCallback(std::vector<Tuple>& tuples) {
       select_list, field_types)) {
     DEBUG_MSG("");
     return false;
+  }
+
+  if (!headers_printed_) {
+    bool tuple_created = false;
+    Tuple header_tuple = Storage()->CreateTuple(
+        temp_relation_name, select_list, tuple_created);
+    if (!tuple_created) {
+      DEBUG_MSG("");
+      return false;
+    }
+
+    std::vector<Tuple> header_tuples = { header_tuple };
+    if (!callback_(header_tuples, true)) {
+      DEBUG_MSG("");
+      return false;
+    }
+
+    headers_printed_ = true;
   }
 
   std::vector<Tuple> output_tuples;
@@ -85,7 +105,7 @@ bool QueryRunnerProjection::ResultCallback(std::vector<Tuple>& tuples) {
     output_tuples.push_back(output_tuple);
   }
 
-  if (!callback_(output_tuples)) {
+  if (!callback_(output_tuples, false)) {
     DEBUG_MSG("");
     return false;
   }

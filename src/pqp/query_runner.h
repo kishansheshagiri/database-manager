@@ -8,7 +8,7 @@
 #include "storage/storage_adapter.h"
 #include "storage/storage_manager_headers.h"
 
-typedef std::function<bool(std::vector<Tuple>&)> QueryResultCallback;
+typedef std::function<bool(std::vector<Tuple>&, bool headers)> QueryResultCallback;
 
 class QueryRunner {
  public:
@@ -16,10 +16,11 @@ class QueryRunner {
   virtual ~QueryRunner() {}
 
   bool Start(SqlErrors::Type& error_code);
+  bool Print(std::vector<Tuple>& tuples, bool headers);
 
   virtual bool Run(QueryResultCallback callback,
       SqlErrors::Type& error_code) = 0;
-  virtual bool ResultCallback(std::vector<Tuple>& tuples) = 0;
+  virtual bool ResultCallback(std::vector<Tuple>& tuples, bool headers) = 0;
 
  protected:
   QueryNode *Node() const { return query_node_; }
@@ -27,7 +28,10 @@ class QueryRunner {
   QueryRunner *Create(QueryNode *child_node);
 
  private:
+  void printClose();
+
   QueryNode *query_node_;
+  int fields_printed_;
   StorageAdapter *storage_adapter_;
 };
 
