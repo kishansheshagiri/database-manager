@@ -1,5 +1,6 @@
 #include "storage_adapter.h"
 
+#include <chrono>
 #include <iomanip>
 #include <regex>
 
@@ -368,8 +369,30 @@ bool StorageAdapter::DeleteRelationBlocks(const std::string relation_name,
   return relation->deleteBlocks(start_index);
 }
 
+bool StorageAdapter::CreateDummyRelation(const std::string name_prefix,
+    std::vector<std::string> field_names, std::string& relation_name) {
+  std::chrono::milliseconds time_ms =
+      std::chrono::duration_cast<std::chrono::milliseconds>(
+          std::chrono::system_clock::now().time_since_epoch());
+  relation_name = name_prefix + std::to_string(
+      time_ms.count());
+  std::vector<enum FIELD_TYPE> field_types(field_names.size(), STR20);
+
+  if (!CreateRelation(relation_name,
+      field_names, field_types)) {
+    DEBUG_MSG("");
+    return false;
+  }
+
+  return true;
+}
+
+bool StorageAdapter::DeleteDummyRelation(std::string relation_name) {
+  return schema_manager_->deleteRelation(relation_name);
+}
+
 bool StorageAdapter::RelationFieldNames(std::string relation_name,
-    std::vector<std::string>& field_names){
+    std::vector<std::string>& field_names) {
   Relation *relation = schema_manager_->getRelation(relation_name);
   if (relation == nullptr) {
     DEBUG_MSG("Invalid relation name: " << relation_name);
@@ -384,10 +407,6 @@ bool StorageAdapter::RelationFieldNames(std::string relation_name,
   }
 
   return true;
-}
-
-bool StorageAdapter::DeleteDummyRelation(std::string relation_name) {
-  return schema_manager_->deleteRelation(relation_name);
 }
 
 // Debug APIs

@@ -1,8 +1,7 @@
 #include "pqp/query_runner_projection.h"
 
-#include <ctime>
-#include <vector>
 #include <string>
+#include <vector>
 
 #include "base/debug.h"
 
@@ -44,15 +43,9 @@ bool QueryRunnerProjection::ResultCallback(std::vector<Tuple>& tuples,
     return Callback()(tuples, headers);
   }
 
-  std::chrono::milliseconds time_ms =
-      std::chrono::duration_cast<std::chrono::milliseconds>(
-          std::chrono::system_clock::now().time_since_epoch());
-  std::string temp_relation_name = "Projection_" + std::to_string(
-      time_ms.count());
-  std::vector<enum FIELD_TYPE> field_types(select_list.size(), STR20);
-
-  if (!Storage()->CreateRelation(temp_relation_name,
-      select_list, field_types)) {
+  std::string temp_relation_name;
+  if (!Storage()->CreateDummyRelation("Projection_", select_list,
+      temp_relation_name)) {
     DEBUG_MSG("");
     return false;
   }

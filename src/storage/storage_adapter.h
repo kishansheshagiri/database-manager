@@ -1,7 +1,6 @@
 #ifndef SRC_STORAGE_ADAPTER_H
 #define SRC_STORAGE_ADAPTER_H
 
-#include <ctime>
 #include <string>
 #include <vector>
 
@@ -49,9 +48,11 @@ class StorageAdapter {
   bool DeleteRelationBlocks(const std::string relation_name,
       const int start_index) const;
 
+  bool CreateDummyRelation(const std::string name_prefix,
+      std::vector<std::string> field_names, std::string& relation_name);
+  bool DeleteDummyRelation(std::string relation_name);
   bool RelationFieldNames(std::string relation_name,
       std::vector<std::string>& field_names);
-  bool DeleteDummyRelation(std::string relation_name);
 
   // Debug APIs
   bool Tuples(const std::string relation_name,

@@ -1,6 +1,5 @@
 #include "pqp/query_runner_scan.h"
 
-#include <chrono>
 #include <string>
 #include <vector>
 
@@ -38,14 +37,9 @@ bool QueryRunnerScan::Run(QueryResultCallback callback,
     return false;
   }
 
-  std::chrono::milliseconds time_ms =
-      std::chrono::duration_cast<std::chrono::milliseconds>(
-          std::chrono::system_clock::now().time_since_epoch());
-  std::string temp_relation_name = "Scan_" + std::to_string(time_ms.count());
-
-  std::vector<enum FIELD_TYPE> field_types(field_names.size(), STR20);
-  if (!Storage()->CreateRelation(temp_relation_name,
-      field_names, field_types)) {
+  std::string temp_relation_name;
+  if (!Storage()->CreateDummyRelation("Scan_", field_names,
+      temp_relation_name)) {
     DEBUG_MSG("");
     return false;
   }
