@@ -149,7 +149,7 @@ bool QueryPlanBuilder::createProducts(const int index,
   }
 
   QueryNode *next_child = node_endings.first == nullptr ?
-      parent : node_endings.second;
+      product_node : node_endings.second;
 
   QueryNode *table_scan_node = createNode(
       next_child, QueryNode::QUERY_NODE_TYPE_TABLE_SCAN);
