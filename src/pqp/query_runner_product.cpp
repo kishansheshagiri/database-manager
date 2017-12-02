@@ -11,6 +11,10 @@ QueryRunnerProduct::QueryRunnerProduct(QueryNode *query_node)
 }
 
 QueryRunnerProduct::~QueryRunnerProduct() {
+  if (table_scan_child_ != nullptr) {
+    delete table_scan_child_;
+    table_scan_child_ = nullptr;
+  }
 }
 
 bool QueryRunnerProduct::Run(QueryResultCallback callback,
@@ -103,4 +107,12 @@ bool QueryRunnerProduct::ResultCallback(QueryRunner *child,
   }
 
   return true;
+}
+
+void QueryRunnerProduct::DeleteTemporaryRelations() {
+  if (table_scan_child_ != nullptr) {
+    table_scan_child_->DeleteTemporaryRelations();
+  }
+
+  QueryRunner::DeleteTemporaryRelations();
 }

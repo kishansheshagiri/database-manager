@@ -13,6 +13,8 @@ class QueryRunnerProduct : public QueryRunner {
   bool ResultCallback(QueryRunner *child,
       std::vector<Tuple>& tuples, bool headers) final;
 
+  void DeleteTemporaryRelations() final;
+
 private:
 
   QueryRunner *table_scan_child_;

@@ -111,6 +111,16 @@ bool QueryRunner::TableHeaders(std::vector<Tuple>& tuples) {
   return false;
 }
 
+void QueryRunner::DeleteTemporaryRelations() {
+  if (child_runner_ && Node() && Node()->ChildrenCount() != 0) {
+    child_runner_->DeleteTemporaryRelations();
+  }
+
+  for (auto relation : temporary_relations_) {
+    Storage()->DeleteDummyRelation(relation);
+  }
+}
+
 void QueryRunner::SetChildRunner(QueryRunner *child_runner) {
   child_runner_ = child_runner;
 }
@@ -122,6 +132,10 @@ void QueryRunner::SetCallback(QueryResultCallback callback) {
 QueryRunner *QueryRunner::Create(QueryNode *child_node) {
   QueryRunnerFactory factory(child_node);
   return factory.Create();
+}
+
+void QueryRunner::MarkTemporaryRelation(std::string relation_name) {
+  temporary_relations_.push_back(relation_name);
 }
 
 bool QueryRunner::MergeTableHeaders(std::vector<Tuple>& first,
@@ -160,7 +174,7 @@ bool QueryRunner::MergeTableHeaders(std::vector<Tuple>& first,
 
   merged_tuples.clear();
   merged_tuples.push_back(field_name_tuple);
-  // Storage()->DeleteDummyRelation(temp_relation_name);
+  MarkTemporaryRelation(temp_relation_name);
   return true;
 }
 

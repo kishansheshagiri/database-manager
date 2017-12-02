@@ -96,7 +96,11 @@ bool QueryPlanBuilder::Build(SqlErrors::Type& error_code) {
 
   QueryRunnerFactory factory(query_node_root_);
   QueryRunner *query_runner = factory.Create();
-  return query_runner->Start(error_code);
+  bool return_value = query_runner->Start(error_code);
+
+  query_runner->DeleteTemporaryRelations();
+  delete query_runner;
+  return return_value;
 }
 
 QueryNode *QueryPlanBuilder::createNode(QueryNode *parent,

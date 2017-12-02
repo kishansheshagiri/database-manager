@@ -47,6 +47,8 @@ class QueryRunner {
   virtual bool ResultCallback(QueryRunner *child,
       std::vector<Tuple>& tuples, bool headers) = 0;
 
+  virtual void DeleteTemporaryRelations();
+
  protected:
   QueryNode *Node() const { return query_node_; }
   StorageAdapter *Storage() const { return storage_adapter_; }
@@ -58,6 +60,7 @@ class QueryRunner {
 
   QueryRunner *Create(QueryNode *child_node);
 
+  void MarkTemporaryRelation(std::string relation_name);
   bool MergeTableHeaders(std::vector<Tuple>& first,
       std::string table_name_first, std::vector<Tuple>& second,
       std::string table_name_second, std::vector<Tuple>& merged_tuples);
@@ -68,6 +71,8 @@ class QueryRunner {
   QueryNode *query_node_;
   QueryRunner *child_runner_;
   QueryResultCallback callback_;
+
+  std::vector<std::string> temporary_relations_;
 
   int fields_printed_;
   StorageAdapter *storage_adapter_;
