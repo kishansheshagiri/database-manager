@@ -15,8 +15,6 @@ class QueryRunnerProduct : public QueryRunner {
 
 private:
 
-  std::vector<Tuple> first_headers_;
-
   QueryRunner *table_scan_child_;
   SqlErrors::Type error_code_;
 };

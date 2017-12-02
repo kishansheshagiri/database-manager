@@ -84,9 +84,27 @@ void QueryRunner::PassScanParams(ScanParams params) {
   }
 }
 
+bool QueryRunner::TableName(std::string& table_name) {
+  if (child_runner_ && Node() && Node()->ChildrenCount() == 1) {
+    return child_runner_->TableName(table_name);
+  }
+
+  DEBUG_MSG("");
+  return false;
+}
+
 bool QueryRunner::TableSize(int& blocks, int& tuples) {
   if (child_runner_ && Node() && Node()->ChildrenCount() == 1) {
     return child_runner_->TableSize(blocks, tuples);
+  }
+
+  DEBUG_MSG("");
+  return false;
+}
+
+bool QueryRunner::TableHeaders(std::vector<Tuple>& tuples) {
+  if (child_runner_ && Node() && Node()->ChildrenCount() == 1) {
+    return child_runner_->TableHeaders(tuples);
   }
 
   DEBUG_MSG("");
@@ -107,17 +125,20 @@ QueryRunner *QueryRunner::Create(QueryNode *child_node) {
 }
 
 bool QueryRunner::MergeTableHeaders(std::vector<Tuple>& first,
-    std::vector<Tuple>& second, std::vector<Tuple>& merged_tuples) {
+    std::string table_name_first, std::vector<Tuple>& second,
+    std::string table_name_second, std::vector<Tuple>& merged_tuples) {
   Tuple tuple_first = first[0];
   std::vector<std::string> field_names_first;
   for (int index = 0; index < tuple_first.getNumOfFields(); index++) {
-    field_names_first.push_back(*(tuple_first.getField(index).str));
+    field_names_first.push_back(table_name_first + "." +
+        *(tuple_first.getField(index).str));
   }
 
   Tuple tuple_second = second[0];
   std::vector<std::string> field_names_second;
   for (int index = 0; index < tuple_second.getNumOfFields(); index++) {
-    field_names_second.push_back(*(tuple_second.getField(index).str));
+    field_names_second.push_back(table_name_second + "." +
+        *(tuple_second.getField(index).str));
   }
 
   std::string temp_relation_name;
@@ -139,7 +160,7 @@ bool QueryRunner::MergeTableHeaders(std::vector<Tuple>& first,
 
   merged_tuples.clear();
   merged_tuples.push_back(field_name_tuple);
-  Storage()->DeleteDummyRelation(temp_relation_name);
+  // Storage()->DeleteDummyRelation(temp_relation_name);
   return true;
 }
 

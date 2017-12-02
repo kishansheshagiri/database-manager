@@ -17,11 +17,13 @@ typedef struct ScanParams {
   ScanParams()
     : one_pass_(true),
       multi_scan_(true),
+      headers_disabled_(false),
       use_begin_blocks_(true),
       start_index_(0),
       num_blocks_(-1) {}
   bool one_pass_;
   bool multi_scan_;
+  bool headers_disabled_;
   bool use_begin_blocks_;
   int start_index_;
   int num_blocks_;
@@ -39,7 +41,9 @@ class QueryRunner {
   virtual bool Run(QueryResultCallback callback,
       SqlErrors::Type& error_code) = 0;
   virtual void PassScanParams(ScanParams params);
+  virtual bool TableName(std::string& table_name);
   virtual bool TableSize(int& blocks, int& tuples);
+  virtual bool TableHeaders(std::vector<Tuple>& tuples);
   virtual bool ResultCallback(QueryRunner *child,
       std::vector<Tuple>& tuples, bool headers) = 0;
 
@@ -54,8 +58,9 @@ class QueryRunner {
 
   QueryRunner *Create(QueryNode *child_node);
 
-  bool MergeTableHeaders(std::vector<Tuple>& first, std::vector<Tuple>& second,
-      std::vector<Tuple>& merged_tuples);
+  bool MergeTableHeaders(std::vector<Tuple>& first,
+      std::string table_name_first, std::vector<Tuple>& second,
+      std::string table_name_second, std::vector<Tuple>& merged_tuples);
 
  private:
   void printClose();

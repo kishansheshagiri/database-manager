@@ -1,6 +1,6 @@
 #include "storage_adapter.h"
 
-#include <chrono>
+#include <cstdlib>
 #include <iomanip>
 #include <regex>
 
@@ -385,11 +385,7 @@ bool StorageAdapter::DeleteRelationBlocks(const std::string relation_name,
 
 bool StorageAdapter::CreateDummyRelation(const std::string name_prefix,
     std::vector<std::string> field_names, std::string& relation_name) {
-  std::chrono::milliseconds time_ms =
-      std::chrono::duration_cast<std::chrono::milliseconds>(
-          std::chrono::system_clock::now().time_since_epoch());
-  relation_name = name_prefix + std::to_string(
-      time_ms.count());
+  relation_name = name_prefix + std::to_string(rand());
   std::vector<enum FIELD_TYPE> field_types(field_names.size(), STR20);
 
   if (!CreateRelation(relation_name,

@@ -33,12 +33,30 @@ bool QueryRunnerProduct::Run(QueryResultCallback callback,
     table_scan_child_ = Create(right_child);
   }
 
+  std::string table_name_first, table_name_second;
+  ChildRunner()->TableName(table_name_first);
+  table_scan_child_->TableName(table_name_second);
+
+  std::vector<Tuple> headers_first, headers_second;
+  ChildRunner()->TableHeaders(headers_first);
+  table_scan_child_->TableHeaders(headers_second);
+
+  std::vector<Tuple> merged_headers;
+  if (!MergeTableHeaders(headers_first, table_name_first,
+      headers_second, table_name_second, merged_headers)) {
+    DEBUG_MSG("");
+    return false;
+  }
+
   ScanParams params;
+  params.headers_disabled_ = true;
   if (ChildRunner()->NodeType() != QueryNode::QUERY_NODE_TYPE_CROSS_PRODUCT) {
     params.num_blocks_ = 1;
   }
 
   ChildRunner()->PassScanParams(params);
+
+  Callback()(this, merged_headers, true);
 
   if (!ChildRunner()->Run(
       std::bind(&QueryRunnerProduct::ResultCallback, this,
@@ -58,34 +76,27 @@ bool QueryRunnerProduct::Run(QueryResultCallback callback,
 
 bool QueryRunnerProduct::ResultCallback(QueryRunner *child,
     std::vector<Tuple>& tuples, bool headers) {
-  if (headers) {
-    DEBUG_MSG("");
-    if (first_headers_.empty()) {
-      first_headers_ = tuples;
-      return true;
+  if (child == ChildRunner()) {
+    ScanParams params;
+    if (ChildRunner()->NodeType() != QueryNode::QUERY_NODE_TYPE_CROSS_PRODUCT) {
+      params.num_blocks_ = 1;
+      params.use_begin_blocks_ = false;
     }
 
-    std::vector<Tuple> merged_headers;
-    if (!MergeTableHeaders(first_headers_, tuples, merged_headers)) {
+    ChildRunner()->PassScanParams(params);
+
+    if (!table_scan_child_->Run(
+        std::bind(&QueryRunnerProduct::ResultCallback, this,
+            std::placeholders::_1, std::placeholders::_2,
+            std::placeholders::_3),
+        error_code_)) {
       DEBUG_MSG("");
+      error_code_ = SqlErrors::ERROR_CROSS_PRODUCT;
       return false;
     }
+  } else if (child == table_scan_child_) {
 
-    return Callback()(this, merged_headers, headers);
-  }
-
-  ScanParams params;
-  if (ChildRunner()->NodeType() != QueryNode::QUERY_NODE_TYPE_CROSS_PRODUCT) {
-    params.num_blocks_ = 1;
-    params.use_begin_blocks_ = false;
-  }
-
-  ChildRunner()->PassScanParams(params);
-
-  if (!table_scan_child_->Run(
-      std::bind(&QueryRunnerProduct::ResultCallback, this,
-          std::placeholders::_1, std::placeholders::_2, std::placeholders::_3),
-      error_code_)) {
+  } else {
     DEBUG_MSG("");
     error_code_ = SqlErrors::ERROR_CROSS_PRODUCT;
     return false;

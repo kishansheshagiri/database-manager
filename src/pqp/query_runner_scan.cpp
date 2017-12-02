@@ -10,8 +10,10 @@
 QueryRunnerScan::QueryRunnerScan(QueryNode *query_node)
   : QueryRunner(query_node),
     next_relation_start_index_(0),
-    headers_passed_(false),
     error_code_(SqlErrors::NO_ERROR) {
+  if (!Node()->TableName(table_name_)) {
+    ERROR_MSG("");
+  }
 }
 
 QueryRunnerScan::~QueryRunnerScan() {
@@ -25,42 +27,17 @@ bool QueryRunnerScan::Run(QueryResultCallback callback,
     return false;
   }
 
-  std::string table_name;
-  if (!Node()->TableName(table_name)) {
-    DEBUG_MSG("");
-    return false;
-  }
-
   SetCallback(callback);
 
-  if (!headers_passed_) {
-    headers_passed_ = true;
-    std::vector<std::string> field_names;
-    if (!Storage()->RelationFieldNames(table_name, field_names)) {
+  std::vector<Tuple> headers;
+  if (!scan_params_.headers_disabled_) {
+    if (!TableHeaders(headers)) {
       DEBUG_MSG("");
+      error_code = SqlErrors::ERROR_TABLE_SCAN;
       return false;
     }
 
-    std::string temp_relation_name;
-    if (!Storage()->CreateDummyRelation("Scan_", field_names,
-        temp_relation_name)) {
-      DEBUG_MSG("");
-      return false;
-    }
-
-    bool created = false;
-    Tuple field_name_tuple = Storage()->CreateTuple(
-        temp_relation_name, field_names, created);
-    if (!created) {
-      DEBUG_MSG("");
-      return false;
-    }
-
-    std::vector<Tuple> field_name_tuple_list;
-    field_name_tuple_list.push_back(field_name_tuple);
-    Callback()(this, field_name_tuple_list, true);
-
-    Storage()->DeleteDummyRelation(temp_relation_name);
+    Callback()(this, headers, true);
   }
 
   bool respond_once = false;
@@ -72,7 +49,7 @@ bool QueryRunnerScan::Run(QueryResultCallback callback,
   int num_blocks = scan_params_.num_blocks_ <= 0 ?
       Storage()->MainMemorySize() : scan_params_.num_blocks_;
   while (!respond_once &&
-      Storage()->ReadRelationBlocks(table_name, relation_start_index,
+      Storage()->ReadRelationBlocks(table_name_, relation_start_index,
           memory_start_index, num_blocks, blocks)) {
     std::vector<Tuple> tuples;
     for (auto block : blocks) {
@@ -98,6 +75,20 @@ void QueryRunnerScan::PassScanParams(ScanParams params) {
   scan_params_ = params;
 }
 
+bool QueryRunnerScan::TableName(std::string& table_name) {
+  if (Node() == nullptr || Node()->ChildrenCount() != 0) {
+    DEBUG_MSG("");
+    return false;
+  }
+
+  if (!Node()->TableName(table_name)) {
+    DEBUG_MSG("");
+    return false;
+  }
+
+  return true;
+}
+
 bool QueryRunnerScan::TableSize(int& blocks, int& tuples) {
   if (Node() == nullptr || Node()->ChildrenCount() != 0) {
     DEBUG_MSG("");
@@ -113,6 +104,33 @@ bool QueryRunnerScan::TableSize(int& blocks, int& tuples) {
 
   blocks = Storage()->RelationBlockSize(table_name);
   tuples = Storage()->RelationTupleSize(table_name);
+  return true;
+}
+
+bool QueryRunnerScan::TableHeaders(std::vector<Tuple>& tuples) {
+  std::vector<std::string> field_names;
+  if (!Storage()->RelationFieldNames(table_name_, field_names)) {
+    DEBUG_MSG("");
+    return false;
+  }
+
+  std::string temp_relation_name;
+  if (!Storage()->CreateDummyRelation("Scan_", field_names,
+      temp_relation_name)) {
+    DEBUG_MSG("");
+    return false;
+  }
+
+  bool created = false;
+  Tuple field_name_tuple = Storage()->CreateTuple(
+      temp_relation_name, field_names, created);
+  if (!created) {
+    DEBUG_MSG("");
+    return false;
+  }
+
+  tuples.push_back(field_name_tuple);
+
   return true;
 }
 
