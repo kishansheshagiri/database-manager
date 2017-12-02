@@ -37,6 +37,7 @@ class StorageAdapter {
   int MainMemorySize() const;
   void SetMainMemoryBlock(int memory_index, Block *block) const;
   int RelationBlockSize(const std::string relation_name) const;
+  int RelationTupleSize(const std::string relation_name) const;
   bool ReadRelationBlocks(const std::string relation_name,
       const int relation_start_index, const int memory_start_index,
       const int num_blocks, std::vector<Block *>& blocks) const;

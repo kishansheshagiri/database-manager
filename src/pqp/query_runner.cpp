@@ -77,9 +77,18 @@ bool QueryRunner::Print(std::vector<Tuple>& tuples, bool headers) {
 }
 
 void QueryRunner::PassScanParams(ScanParams params) {
-  if (child_runner_) {
+  if (child_runner_ && Node() && Node()->ChildrenCount() == 1) {
     child_runner_->PassScanParams(params);
   }
+}
+
+bool QueryRunner::TableSize(int& size) {
+  if (child_runner_ && Node() && Node()->ChildrenCount() == 1) {
+    return child_runner_->TableSize(size);
+  }
+
+  DEBUG_MSG("");
+  return false;
 }
 
 void QueryRunner::SetChildRunner(QueryRunner *child_runner) {

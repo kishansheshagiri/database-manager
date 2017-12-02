@@ -282,6 +282,16 @@ int StorageAdapter::RelationBlockSize(const std::string relation_name) const {
   return relation->getNumOfBlocks();
 }
 
+int StorageAdapter::RelationTupleSize(const std::string relation_name) const {
+  Relation *relation = schema_manager_->getRelation(relation_name);
+  if (relation == nullptr) {
+    DEBUG_MSG("Invalid relation name: " << relation_name);
+    return 0;
+  }
+
+  return relation->getNumOfTuples();
+}
+
 bool StorageAdapter::ReadRelationBlocks(const std::string relation_name,
     const int relation_start_index, const int memory_start_index,
     const int num_blocks, std::vector<Block *>& blocks) const {

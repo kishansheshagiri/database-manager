@@ -11,9 +11,11 @@ class QueryRunnerScan : public QueryRunner {
 
   bool Run(QueryResultCallback callback, SqlErrors::Type& error_code) final;
   void PassScanParams(ScanParams params) final;
+  bool TableSize(int& size) final;
   bool ResultCallback(std::vector<Tuple>& tuples, bool headers) final;
 
 private:
+  int next_relation_start_index_;
   ScanParams scan_params_;
   SqlErrors::Type error_code_;
 };
