@@ -84,15 +84,6 @@ void StatementSelect::Execute(SqlErrors::Type& error_code) {
     DEBUG_MSG("");
     return;
   }
-
-  if (select_list_[0] == "*" && table_list_.size() == 1) {
-    TupleList tuples;
-    Storage()->Tuples(table_list_[0], tuples);
-    Storage()->PrintTupleList(table_list_[0], tuples);
-    return;
-  }
-
-  error_code = SqlErrors::UNKNOWN_ERROR;
 }
 
 bool StatementSelect::validateLists(SqlErrors::Type& error_code) const {

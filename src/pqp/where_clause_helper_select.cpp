@@ -64,6 +64,10 @@ void WhereClauseHelperSelect::OptimizationCandidates(
     return;
   }
 
+  if (table_list_.size() == 1) {
+    return;
+  }
+
   std::vector<SqlNode *> children = RootNode()->Children();
   return optimizationCandidatesBooleanTerm(RootNode()->Child(0),
       push_candidates, join_attributes);
@@ -154,18 +158,21 @@ bool WhereClauseHelperSelect::isValidColumnName(SqlNode *column_node) const {
   std::string table_name, attribute_name;
   Tokenizer::SplitIntoTwo(column_name, '.', table_name, attribute_name);
   if (attribute_name.empty()) {
-    attribute_name = table_name;
-    table_name.clear();
+    if (table_list_.size() == 1) {
+      attribute_name = table_name;
+      table_name = table_list_[0];
+    } else {
+      DEBUG_MSG("");
+      return false;
+    }
   }
 
   auto table_position = std::find(
       table_list_.begin(), table_list_.end(), table_name);
-  if (!table_name.empty() && table_position == table_list_.end()) {
+  if (table_position == table_list_.end()) {
     DEBUG_MSG("");
     return false;
   }
-
-  table_name = *table_position;
 
   return Storage()->IsValidColumnName(table_name, attribute_name);
 }

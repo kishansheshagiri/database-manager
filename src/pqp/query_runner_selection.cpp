@@ -44,6 +44,10 @@ bool QueryRunnerSelection::Run(QueryResultCallback callback,
 
 bool QueryRunnerSelection::ResultCallback(std::vector<Tuple>& tuples,
     bool headers) {
+  if (headers) {
+    return Callback()(tuples, headers);
+  }
+
   WhereClauseHelperSelect *where_helper;
   if (!Node()->WhereHelper(where_helper) || where_helper == nullptr) {
     DEBUG_MSG("");

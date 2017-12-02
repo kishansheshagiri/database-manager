@@ -41,12 +41,14 @@ bool QueryRunnerProjection::ResultCallback(std::vector<Tuple>& tuples,
   }
 
   if (select_list.size() == 1 && select_list[0] == "*") {
-    DEBUG_MSG("");
     return Callback()(tuples, headers);
   }
 
-  std::time_t time_now = std::time(nullptr);
-  std::string temp_relation_name = "Projection_" + std::to_string(time_now);
+  std::chrono::milliseconds time_ms =
+      std::chrono::duration_cast<std::chrono::milliseconds>(
+          std::chrono::system_clock::now().time_since_epoch());
+  std::string temp_relation_name = "Projection_" + std::to_string(
+      time_ms.count());
   std::vector<enum FIELD_TYPE> field_types(select_list.size(), STR20);
 
   if (!Storage()->CreateRelation(temp_relation_name,

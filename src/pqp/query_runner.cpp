@@ -8,6 +8,7 @@
 QueryRunner::QueryRunner(QueryNode *query_node)
   : query_node_(query_node),
     child_runner_(nullptr),
+    fields_printed_(0),
     storage_adapter_(StorageAdapter::Get()) {
 }
 
@@ -33,32 +34,42 @@ bool QueryRunner::Start(SqlErrors::Type& error_code) {
 
 bool QueryRunner::Print(std::vector<Tuple>& tuples, bool headers) {
   if (headers) {
-    DEBUG_MSG_SINGLE_LINE("\n");
-    DEBUG_MSG_SINGLE_LINE(
-        "+" << std::string(19 * tuples.size(), '-') << "+");
-    DEBUG_MSG_SINGLE_LINE("\n");
-
-    int index;
     Tuple field_names = tuples[0];
-    for (index = 0; index < field_names.getNumOfFields(); index++) {
-      DEBUG_MSG_SINGLE_LINE("|" << setw(18) << std::left <<
+    int field_count = field_names.getNumOfFields();
+    ERROR_MSG_SINGLE_LINE("\n");
+    ERROR_MSG_SINGLE_LINE(
+        "+" << std::string(19 * field_count, '-') << "+");
+    ERROR_MSG_SINGLE_LINE("\n");
+
+    for (int index = 0; index < field_count; index++) {
+      ERROR_MSG_SINGLE_LINE("|" << setw(18) << std::left <<
           *(field_names.getField(index).str));
     }
 
-    DEBUG_MSG_SINGLE_LINE(" |\n");
-    DEBUG_MSG_SINGLE_LINE(
-        "+" << std::string(19 * index, '-') << "+");
-    DEBUG_MSG_SINGLE_LINE("\n");
+    ERROR_MSG_SINGLE_LINE(" |\n");
+    ERROR_MSG_SINGLE_LINE(
+        "+" << std::string(19 * field_count, '-') << "+");
+    ERROR_MSG_SINGLE_LINE("\n");
 
-    fields_printed_ = index;
+    fields_printed_ = field_count;
   } else {
     for (auto tuple : tuples) {
       for (int index = 0; index < tuple.getNumOfFields(); index++) {
-        DEBUG_MSG_SINGLE_LINE("|" << setw(18) << std::left <<
-            *(tuple.getField(index).str));
+        std::string field_value;
+        if (tuple.getSchema().getFieldType(index) == INT) {
+          int value = tuple.getField(index).integer;
+          field_value = std::to_string(value);
+          if (value == -1) {
+            field_value = "NULL";
+          }
+        } else if (tuple.getSchema().getFieldType(index) == STR20) {
+          field_value = *(tuple.getField(index).str);
+        }
+
+        ERROR_MSG_SINGLE_LINE("|" << setw(18) << std::left << field_value);
       }
 
-      DEBUG_MSG_SINGLE_LINE(" |\n");
+      ERROR_MSG_SINGLE_LINE(" |\n");
     }
   }
 
@@ -79,7 +90,7 @@ QueryRunner *QueryRunner::Create(QueryNode *child_node) {
 }
 
 void QueryRunner::printClose() {
-  DEBUG_MSG_SINGLE_LINE(
+  ERROR_MSG_SINGLE_LINE(
       "+" << std::string(19 * fields_printed_, '-') << "+");
-  DEBUG_MSG_SINGLE_LINE("\n");
+  ERROR_MSG_SINGLE_LINE("\n");
 }

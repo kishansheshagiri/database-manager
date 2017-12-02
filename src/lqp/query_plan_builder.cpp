@@ -4,6 +4,8 @@
 
 #include "base/debug.h"
 #include "base/tokenizer.h"
+#include "pqp/query_runner.h"
+#include "pqp/query_runner_factory.h"
 
 QueryPlanBuilder::QueryPlanBuilder(bool distinct,
     std::string sort_column,
@@ -71,16 +73,17 @@ bool QueryPlanBuilder::Build(SqlErrors::Type& error_code) {
   if (where_node_) {
     where_helper_->OptimizationCandidates(push_candidates,
       join_attributes);
+
+    QueryNode *selection_node = createNode(next_node,
+        QueryNode::QUERY_NODE_TYPE_SELECTION);
+    selection_node->SetWhereHelper(where_helper_);
+    next_node = selection_node;
   }
 
-  QueryNode *selection_node = createNode(next_node,
-      QueryNode::QUERY_NODE_TYPE_SELECTION);
-  selection_node->SetWhereHelper(where_helper_);
-
   if (!createProducts(0, QueryNode::QUERY_NODE_TYPE_CROSS_PRODUCT,
-      selection_node, push_candidates)) {
+      next_node, push_candidates)) {
     DEBUG_MSG("Failed to create products");
-    error_code = SqlErrors::WHERE_CLAUSE_ERROR;
+    error_code = SqlErrors::ERROR_SELECTION;
     return false;
   }
 
@@ -90,7 +93,9 @@ bool QueryPlanBuilder::Build(SqlErrors::Type& error_code) {
     return false;
   }
 
-  return true;
+  QueryRunnerFactory factory(query_node_root_);
+  QueryRunner *query_runner = factory.Create();
+  return query_runner->Start(error_code);
 }
 
 QueryNode *QueryPlanBuilder::createNode(QueryNode *parent,
