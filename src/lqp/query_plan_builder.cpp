@@ -1,5 +1,6 @@
 #include "lqp/query_plan_builder.h"
 
+#include <algorithm>
 #include <utility>
 
 #include "base/debug.h"
