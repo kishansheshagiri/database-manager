@@ -284,6 +284,8 @@ int StorageAdapter::RelationBlockSize(const std::string relation_name) const {
 bool StorageAdapter::ReadRelationBlocks(const std::string relation_name,
     const int relation_start_index, const int memory_start_index,
     const int num_blocks, std::vector<Block *>& blocks) const {
+  blocks.clear();
+
   Relation *relation = schema_manager_->getRelation(relation_name);
   if (relation == nullptr) {
     DEBUG_MSG("Invalid relation name: " << relation_name);
@@ -301,6 +303,11 @@ bool StorageAdapter::ReadRelationBlocks(const std::string relation_name,
   int adjusted_num_blocks = std::min(adjusted_relation_num_blocks,
       adjusted_memory_num_blocks);
 
+  if (adjusted_num_blocks < 1) {
+    LOG_MSG("");
+    return false;
+  }
+
   if (!relation->getBlocks(relation_start_index, memory_start_index,
       adjusted_num_blocks)) {
     DEBUG_MSG("Index out of bound. Index: " << relation_start_index <<
@@ -308,7 +315,7 @@ bool StorageAdapter::ReadRelationBlocks(const std::string relation_name,
     return false;
   }
 
-  for (int index = 0; index < adjusted_num_blocks; index++) {
+  for (int index = memory_start_index; index < adjusted_num_blocks; index++) {
     blocks.push_back(main_memory_->getBlock(index));
   }
 

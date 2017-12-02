@@ -82,6 +82,10 @@ bool QueryRunnerScan::Run(QueryResultCallback callback,
       return false;
     }
 
+    for (auto block : blocks) {
+      block->clear();
+    }
+
     relation_start_index += blocks.size();
   }
 
