@@ -104,6 +104,43 @@ QueryRunner *QueryRunner::Create(QueryNode *child_node) {
   return factory.Create();
 }
 
+bool QueryRunner::MergeTableHeaders(std::vector<Tuple>& first,
+    std::vector<Tuple>& second, std::vector<Tuple>& merged_tuples) {
+  Tuple tuple_first = first[0];
+  std::vector<std::string> field_names_first;
+  for (int index = 0; index < tuple_first.getNumOfFields(); index++) {
+    field_names_first.push_back(*(tuple_first.getField(index).str));
+  }
+
+  Tuple tuple_second = second[0];
+  std::vector<std::string> field_names_second;
+  for (int index = 0; index < tuple_second.getNumOfFields(); index++) {
+    field_names_second.push_back(*(tuple_second.getField(index).str));
+  }
+
+  std::string temp_relation_name;
+  field_names_first.insert(field_names_first.end(),
+      field_names_second.begin(), field_names_second.end());
+  if (!Storage()->CreateDummyRelation("Header_", field_names_first,
+      temp_relation_name)) {
+    DEBUG_MSG("");
+    return false;
+  }
+
+  bool created = false;
+  Tuple field_name_tuple = Storage()->CreateTuple(
+      temp_relation_name, field_names_first, created);
+  if (!created) {
+    DEBUG_MSG("");
+    return false;
+  }
+
+  merged_tuples.clear();
+  merged_tuples.push_back(field_name_tuple);
+  Storage()->DeleteDummyRelation(temp_relation_name);
+  return true;
+}
+
 void QueryRunner::printClose() {
   ERROR_MSG_SINGLE_LINE(
       "+" << std::string(19 * fields_printed_, '-') << "+");

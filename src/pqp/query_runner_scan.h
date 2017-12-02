@@ -17,6 +17,7 @@ class QueryRunnerScan : public QueryRunner {
 private:
   int next_relation_start_index_;
   ScanParams scan_params_;
+  bool headers_passed_;
   SqlErrors::Type error_code_;
 };
 

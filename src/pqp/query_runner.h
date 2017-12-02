@@ -32,6 +32,7 @@ class QueryRunner {
 
   bool Start(SqlErrors::Type& error_code);
   bool Print(std::vector<Tuple>& tuples, bool headers);
+  QueryNode::QueryNodeType NodeType() const { return Node()->Type(); }
 
   virtual bool Run(QueryResultCallback callback,
       SqlErrors::Type& error_code) = 0;
@@ -49,6 +50,9 @@ class QueryRunner {
   void SetCallback(QueryResultCallback callback);
 
   QueryRunner *Create(QueryNode *child_node);
+
+  bool MergeTableHeaders(std::vector<Tuple>& first, std::vector<Tuple>& second,
+      std::vector<Tuple>& merged_tuples);
 
  private:
   void printClose();

@@ -23,6 +23,7 @@ SOURCES = StorageManager.cpp \
 					query_plan_builder.cpp \
 					query_runner.cpp \
 					query_runner_factory.cpp \
+					query_runner_product.cpp \
 					query_runner_projection.cpp \
 					query_runner_scan.cpp \
 					query_runner_selection.cpp \
