@@ -361,6 +361,28 @@ bool StorageAdapter::DeleteRelationBlocks(const std::string relation_name,
   return relation->deleteBlocks(start_index);
 }
 
+bool StorageAdapter::RelationFieldNames(std::string relation_name,
+    std::vector<std::string>& field_names){
+  Relation *relation = schema_manager_->getRelation(relation_name);
+  if (relation == nullptr) {
+    DEBUG_MSG("Invalid relation name: " << relation_name);
+    return false;
+  }
+
+  Schema schema = relation->getSchema();
+  field_names = schema.getFieldNames();
+  if (field_names.size() == 0) {
+    DEBUG_MSG("");
+    return false;
+  }
+
+  return true;
+}
+
+bool StorageAdapter::DeleteDummyRelation(std::string relation_name) {
+  return schema_manager_->deleteRelation(relation_name);
+}
+
 // Debug APIs
 bool StorageAdapter::Tuples(const std::string relation_name,
     TupleList& tuples_as_string) const {

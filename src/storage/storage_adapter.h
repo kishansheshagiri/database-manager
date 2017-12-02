@@ -49,6 +49,10 @@ class StorageAdapter {
   bool DeleteRelationBlocks(const std::string relation_name,
       const int start_index) const;
 
+  bool RelationFieldNames(std::string relation_name,
+      std::vector<std::string>& field_names);
+  bool DeleteDummyRelation(std::string relation_name);
+
   // Debug APIs
   bool Tuples(const std::string relation_name,
       TupleList& tuples_as_string) const;
