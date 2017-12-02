@@ -93,6 +93,6 @@ bool QueryRunnerProjection::ResultCallback(std::vector<Tuple>& tuples,
     return false;
   }
 
-  Storage()->DeleteRelation(temp_relation_name);
+  Storage()->DeleteDummyRelation(temp_relation_name);
   return true;
 }

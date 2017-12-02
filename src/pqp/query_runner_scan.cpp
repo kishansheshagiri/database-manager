@@ -62,7 +62,7 @@ bool QueryRunnerScan::Run(QueryResultCallback callback,
   field_name_tuple_list.push_back(field_name_tuple);
   Callback()(field_name_tuple_list, true);
 
-  Storage()->DeleteRelation(temp_relation_name);
+  Storage()->DeleteDummyRelation(temp_relation_name);
 
   std::vector<Block *> blocks;
 
