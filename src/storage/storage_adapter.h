@@ -29,6 +29,7 @@ class StorageAdapter {
       const int start_index) const;
   bool DeleteAllTuples(const std::string& relation_name) const;
 
+  bool IsValidRelation(const std::string& table_name) const;
   bool IsValidColumnName(const std::string& table_name,
       const std::string& attribute_name) const;
   bool AttributeType(const std::string& table_name,

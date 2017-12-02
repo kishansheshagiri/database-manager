@@ -96,19 +96,21 @@ void QueryRunnerScan::PassScanParams(ScanParams params) {
   scan_params_ = params;
 }
 
-bool QueryRunnerScan::TableSize(int& size) {
+bool QueryRunnerScan::TableSize(int& blocks, int& tuples) {
   if (Node() == nullptr || Node()->ChildrenCount() != 0) {
     DEBUG_MSG("");
     return false;
   }
 
   std::string table_name;
-  if (!Node()->TableName(table_name)) {
+  if (!Node()->TableName(table_name) ||
+      !Storage()->IsValidRelation(table_name)) {
     DEBUG_MSG("");
     return false;
   }
 
-  size = Storage()->RelationTupleSize(table_name);
+  blocks = Storage()->RelationBlockSize(table_name);
+  tuples = Storage()->RelationTupleSize(table_name);
   return true;
 }
 

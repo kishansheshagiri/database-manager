@@ -82,9 +82,9 @@ void QueryRunner::PassScanParams(ScanParams params) {
   }
 }
 
-bool QueryRunner::TableSize(int& size) {
+bool QueryRunner::TableSize(int& blocks, int& tuples) {
   if (child_runner_ && Node() && Node()->ChildrenCount() == 1) {
-    return child_runner_->TableSize(size);
+    return child_runner_->TableSize(blocks, tuples);
   }
 
   DEBUG_MSG("");

@@ -229,6 +229,10 @@ bool StorageAdapter::DeleteAllTuples(const std::string& relation_name) const {
   return DeleteTuples(relation_name, 0);
 }
 
+bool StorageAdapter::IsValidRelation(const std::string& table_name) const {
+  return schema_manager_->relationExists(table_name);
+}
+
 bool StorageAdapter::IsValidColumnName(const std::string& table_name,
     const std::string& attribute_name) const {
   Relation *relation = schema_manager_->getRelation(table_name);

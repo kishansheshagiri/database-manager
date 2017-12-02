@@ -29,7 +29,7 @@ class QueryRunner {
   virtual bool Run(QueryResultCallback callback,
       SqlErrors::Type& error_code) = 0;
   virtual void PassScanParams(ScanParams params);
-  virtual bool TableSize(int& size);
+  virtual bool TableSize(int& blocks, int& tuples);
   virtual bool ResultCallback(std::vector<Tuple>& tuples, bool headers) = 0;
 
  protected:

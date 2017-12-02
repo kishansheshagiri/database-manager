@@ -11,7 +11,7 @@ class QueryRunnerScan : public QueryRunner {
 
   bool Run(QueryResultCallback callback, SqlErrors::Type& error_code) final;
   void PassScanParams(ScanParams params) final;
-  bool TableSize(int& size) final;
+  bool TableSize(int& blocks, int& tuples) final;
   bool ResultCallback(std::vector<Tuple>& tuples, bool headers) final;
 
 private:
