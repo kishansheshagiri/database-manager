@@ -41,8 +41,8 @@ bool QueryRunnerProduct::Run(QueryResultCallback callback,
   ChildRunner()->PassScanParams(params);
 
   if (!ChildRunner()->Run(
-      std::bind(&QueryRunnerProduct::ResultCallback,
-          this, std::placeholders::_1, std::placeholders::_2),
+      std::bind(&QueryRunnerProduct::ResultCallback, this,
+          std::placeholders::_1, std::placeholders::_2, std::placeholders::_3),
       error_code)) {
     DEBUG_MSG("");
     if (error_code_ == SqlErrors::NO_ERROR) {
@@ -56,8 +56,8 @@ bool QueryRunnerProduct::Run(QueryResultCallback callback,
   return true;
 }
 
-bool QueryRunnerProduct::ResultCallback(std::vector<Tuple>& tuples,
-    bool headers) {
+bool QueryRunnerProduct::ResultCallback(QueryRunner *child,
+    std::vector<Tuple>& tuples, bool headers) {
   if (headers) {
     DEBUG_MSG("");
     if (first_headers_.empty()) {
@@ -71,7 +71,7 @@ bool QueryRunnerProduct::ResultCallback(std::vector<Tuple>& tuples,
       return false;
     }
 
-    return Callback()(merged_headers, headers);
+    return Callback()(this, merged_headers, headers);
   }
 
   ScanParams params;
@@ -83,8 +83,8 @@ bool QueryRunnerProduct::ResultCallback(std::vector<Tuple>& tuples,
   ChildRunner()->PassScanParams(params);
 
   if (!table_scan_child_->Run(
-      std::bind(&QueryRunnerProduct::ResultCallback,
-          this, std::placeholders::_1, std::placeholders::_2),
+      std::bind(&QueryRunnerProduct::ResultCallback, this,
+          std::placeholders::_1, std::placeholders::_2, std::placeholders::_3),
       error_code_)) {
     DEBUG_MSG("");
     error_code_ = SqlErrors::ERROR_CROSS_PRODUCT;

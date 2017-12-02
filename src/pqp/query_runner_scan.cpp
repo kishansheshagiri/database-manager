@@ -58,7 +58,7 @@ bool QueryRunnerScan::Run(QueryResultCallback callback,
 
     std::vector<Tuple> field_name_tuple_list;
     field_name_tuple_list.push_back(field_name_tuple);
-    Callback()(field_name_tuple_list, true);
+    Callback()(this, field_name_tuple_list, true);
 
     Storage()->DeleteDummyRelation(temp_relation_name);
   }
@@ -81,7 +81,7 @@ bool QueryRunnerScan::Run(QueryResultCallback callback,
       block->clear();
     }
 
-    if (!Callback()(tuples, false)) {
+    if (!Callback()(this, tuples, false)) {
       DEBUG_MSG("");
       return false;
     }
@@ -116,8 +116,8 @@ bool QueryRunnerScan::TableSize(int& blocks, int& tuples) {
   return true;
 }
 
-bool QueryRunnerScan::ResultCallback(std::vector<Tuple>& tuples,
-    bool headers) {
+bool QueryRunnerScan::ResultCallback(QueryRunner *child,
+    std::vector<Tuple>& tuples, bool headers) {
   DEBUG_MSG("EMPTY FUNCTION");
   return true;
 }

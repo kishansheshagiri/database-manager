@@ -27,8 +27,8 @@ bool QueryRunnerSelection::Run(QueryResultCallback callback,
   SetChildRunner(Create(child_node));
 
   if (!ChildRunner()->Run(
-      std::bind(&QueryRunnerSelection::ResultCallback,
-          this, std::placeholders::_1, std::placeholders::_2),
+      std::bind(&QueryRunnerSelection::ResultCallback, this,
+          std::placeholders::_1, std::placeholders::_2,std::placeholders::_3),
       error_code)) {
     DEBUG_MSG("");
     if (error_code_ == SqlErrors::NO_ERROR) {
@@ -42,10 +42,10 @@ bool QueryRunnerSelection::Run(QueryResultCallback callback,
   return true;
 }
 
-bool QueryRunnerSelection::ResultCallback(std::vector<Tuple>& tuples,
-    bool headers) {
+bool QueryRunnerSelection::ResultCallback(QueryRunner *child,
+    std::vector<Tuple>& tuples, bool headers) {
   if (headers) {
-    return Callback()(tuples, headers);
+    return Callback()(this, tuples, headers);
   }
 
   WhereClauseHelperSelect *where_helper;
@@ -63,7 +63,7 @@ bool QueryRunnerSelection::ResultCallback(std::vector<Tuple>& tuples,
     }
   }
 
-  if (!Callback()(tuples, headers)) {
+  if (!Callback()(this, tuples, headers)) {
     DEBUG_MSG("");
     return false;
   }

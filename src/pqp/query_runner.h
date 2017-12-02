@@ -8,8 +8,10 @@
 #include "storage/storage_adapter.h"
 #include "storage/storage_manager_headers.h"
 
-typedef std::function<bool(std::vector<Tuple>&, bool headers)>
-    QueryResultCallback;
+class QueryRunner;
+
+typedef std::function<bool(QueryRunner *,
+    std::vector<Tuple>&, bool)> QueryResultCallback;
 
 typedef struct ScanParams {
   ScanParams()
@@ -31,14 +33,15 @@ class QueryRunner {
   virtual ~QueryRunner();
 
   bool Start(SqlErrors::Type& error_code);
-  bool Print(std::vector<Tuple>& tuples, bool headers);
+  bool Print(QueryRunner *child, std::vector<Tuple>& tuples, bool headers);
   QueryNode::QueryNodeType NodeType() const { return Node()->Type(); }
 
   virtual bool Run(QueryResultCallback callback,
       SqlErrors::Type& error_code) = 0;
   virtual void PassScanParams(ScanParams params);
   virtual bool TableSize(int& blocks, int& tuples);
-  virtual bool ResultCallback(std::vector<Tuple>& tuples, bool headers) = 0;
+  virtual bool ResultCallback(QueryRunner *child,
+      std::vector<Tuple>& tuples, bool headers) = 0;
 
  protected:
   QueryNode *Node() const { return query_node_; }

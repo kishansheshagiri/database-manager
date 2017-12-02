@@ -10,7 +10,8 @@ class QueryRunnerSelection : public QueryRunner {
   ~QueryRunnerSelection();
 
   bool Run(QueryResultCallback callback, SqlErrors::Type& error_code) final;
-  bool ResultCallback(std::vector<Tuple>& tuples, bool headers) final;
+  bool ResultCallback(QueryRunner *child,
+      std::vector<Tuple>& tuples, bool headers) final;
 
 private:
   SqlErrors::Type error_code_;

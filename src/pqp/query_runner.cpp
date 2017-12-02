@@ -20,8 +20,9 @@ QueryRunner::~QueryRunner() {
 }
 
 bool QueryRunner::Start(SqlErrors::Type& error_code) {
-  if (!Run(std::bind(&QueryRunner::Print,
-                       this, std::placeholders::_1, std::placeholders::_2),
+  if (!Run(std::bind(&QueryRunner::Print, this,
+                     std::placeholders::_1, std::placeholders::_2,
+                     std::placeholders::_3),
              error_code)) {
     DEBUG_MSG("");
     return false;
@@ -32,7 +33,8 @@ bool QueryRunner::Start(SqlErrors::Type& error_code) {
   return false;
 }
 
-bool QueryRunner::Print(std::vector<Tuple>& tuples, bool headers) {
+bool QueryRunner::Print(QueryRunner *child,
+    std::vector<Tuple>& tuples, bool headers) {
   if (headers) {
     Tuple field_names = tuples[0];
     int field_count = field_names.getNumOfFields();
