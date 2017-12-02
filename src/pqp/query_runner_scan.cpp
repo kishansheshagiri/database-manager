@@ -62,17 +62,19 @@ bool QueryRunnerScan::Run(QueryResultCallback callback,
   bool respond_once = false;
   std::vector<Block *> blocks;
 
-  int memory_start_index =
-      !scan_params_.one_pass_ && !scan_params_.use_begin_blocks_ ?
-          Storage()->MainMemorySize() / 2 : 0;
+  int memory_start_index = scan_params_.use_begin_blocks_ ?
+          0 : Storage()->MainMemorySize() / 2;
   int relation_start_index = 0;
+  int num_blocks = scan_params_.num_blocks_ <= 0 ?
+      Storage()->MainMemorySize() : scan_params_.num_blocks_;
   while (!respond_once &&
       Storage()->ReadRelationBlocks(table_name, relation_start_index,
-          memory_start_index, Storage()->MainMemorySize(), blocks)) {
+          memory_start_index, num_blocks, blocks)) {
     std::vector<Tuple> tuples;
     for (auto block : blocks) {
       std::vector<Tuple> insert_tuples = block->getTuples();
       tuples.insert(tuples.end(), insert_tuples.begin(), insert_tuples.end());
+      block->clear();
     }
 
     if (!Callback()(tuples, false)) {
@@ -80,13 +82,9 @@ bool QueryRunnerScan::Run(QueryResultCallback callback,
       return false;
     }
 
-    for (auto block : blocks) {
-      block->clear();
-    }
-
     relation_start_index += blocks.size();
     next_relation_start_index_ = relation_start_index;
-    respond_once = scan_params_.one_pass_ ? false : true;
+    respond_once = scan_params_.multi_scan_ ? false : true;
   }
 
   return true;
