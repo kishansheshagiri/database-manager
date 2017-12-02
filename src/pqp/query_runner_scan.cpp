@@ -66,11 +66,12 @@ bool QueryRunnerScan::Run(QueryResultCallback callback,
 
   std::vector<Block *> blocks;
 
-  int memory_start_index = 0;
+  int memory_start_index =
+      !scan_params_.one_pass_ && !scan_params_.use_begin_blocks_ ?
+          Storage()->MainMemorySize() / 2 : 0;
   int relation_start_index = 0;
-  int num_blocks = Storage()->MainMemorySize();
   while (Storage()->ReadRelationBlocks(table_name, relation_start_index,
-      memory_start_index, num_blocks, blocks)) {
+      memory_start_index, Storage()->MainMemorySize(), blocks)) {
     std::vector<Tuple> tuples;
     for (auto block : blocks) {
       std::vector<Tuple> insert_tuples = block->getTuples();
@@ -90,6 +91,10 @@ bool QueryRunnerScan::Run(QueryResultCallback callback,
   }
 
   return true;
+}
+
+void QueryRunnerScan::PassScanParams(ScanParams params) {
+  scan_params_ = params;
 }
 
 bool QueryRunnerScan::ResultCallback(std::vector<Tuple>& tuples,

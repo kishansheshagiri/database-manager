@@ -11,6 +11,12 @@
 typedef std::function<bool(std::vector<Tuple>&, bool headers)>
     QueryResultCallback;
 
+typedef struct ScanParams {
+  ScanParams() : one_pass_(true), use_begin_blocks_(true) {}
+  bool one_pass_;
+  bool use_begin_blocks_;
+} ScanParams;
+
 class QueryRunner {
  public:
   QueryRunner(QueryNode *query_node);
@@ -21,6 +27,7 @@ class QueryRunner {
 
   virtual bool Run(QueryResultCallback callback,
       SqlErrors::Type& error_code) = 0;
+  virtual void PassScanParams(ScanParams params);
   virtual bool ResultCallback(std::vector<Tuple>& tuples, bool headers) = 0;
 
  protected:

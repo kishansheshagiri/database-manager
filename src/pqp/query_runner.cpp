@@ -76,6 +76,12 @@ bool QueryRunner::Print(std::vector<Tuple>& tuples, bool headers) {
   return true;
 }
 
+void QueryRunner::PassScanParams(ScanParams params) {
+  if (child_runner_) {
+    child_runner_->PassScanParams(params);
+  }
+}
+
 void QueryRunner::SetChildRunner(QueryRunner *child_runner) {
   child_runner_ = child_runner;
 }
