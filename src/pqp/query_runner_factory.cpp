@@ -4,6 +4,7 @@
 #include "pqp/query_runner_projection.h"
 #include "pqp/query_runner_scan.h"
 #include "pqp/query_runner_selection.h"
+#include "pqp/query_runner_sort.h"
 
 QueryRunnerFactory::QueryRunnerFactory(QueryNode *query_node)
     : query_node_(query_node) {
@@ -18,6 +19,8 @@ QueryRunner *QueryRunnerFactory::Create() const {
   switch (node_type) {
     case QueryNode::QUERY_NODE_TYPE_TABLE_SCAN:
       return new QueryRunnerScan(query_node_);
+    case QueryNode::QUERY_NODE_TYPE_SORT:
+      return new QueryRunnerSort(query_node_);
     case QueryNode::QUERY_NODE_TYPE_PROJECTION:
       return new QueryRunnerProjection(query_node_);
     case QueryNode::QUERY_NODE_TYPE_SELECTION:

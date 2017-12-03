@@ -178,7 +178,6 @@ void QueryPlanBuilder::createPushCandidateNodes(PushCandidates& push_candidates,
   std::string sort_table_name, sort_attribute_name;
   Tokenizer::SplitIntoTwo(sort_column_, '.',
       sort_table_name, sort_attribute_name);
-  DEBUG_MSG("");
   if (sort_node != nullptr && (
       sort_table_name == table_name || sort_table_name == "*")) {
     push_candidate_nodes.push_back(sort_node);
