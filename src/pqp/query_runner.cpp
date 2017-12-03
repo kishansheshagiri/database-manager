@@ -48,7 +48,7 @@ bool QueryRunner::Print(QueryRunner *child, std::vector<Tuple>& tuples) {
     ERROR_MSG_SINGLE_LINE("\n");
 
     for (int index = 0; index < field_count; index++) {
-      ERROR_MSG_SINGLE_LINE("|" << setw(18) << std::left <<
+      ERROR_MSG_SINGLE_LINE("| " << setw(17) << std::left <<
           schema.getFieldName(index));
     }
 
@@ -73,7 +73,7 @@ bool QueryRunner::Print(QueryRunner *child, std::vector<Tuple>& tuples) {
         field_value = *(tuple.getField(index).str);
       }
 
-      ERROR_MSG_SINGLE_LINE("|" << setw(18) << std::left << field_value);
+      ERROR_MSG_SINGLE_LINE("| " << setw(17) << std::left << field_value);
     }
 
     ERROR_MSG_SINGLE_LINE(" |\n");
