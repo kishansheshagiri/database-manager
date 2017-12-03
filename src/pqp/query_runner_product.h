@@ -16,6 +16,7 @@ class QueryRunnerProduct : public QueryRunner {
   void PassScanParams(ScanParams params) final;
   bool TableName(std::string& table_name) final;
   bool TableSize(int& blocks, int& tuples) final;
+  bool HasSortNode() const final;
 
   void DeleteTemporaryRelations() final;
 

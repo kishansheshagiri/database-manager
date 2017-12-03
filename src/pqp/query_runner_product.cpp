@@ -143,6 +143,10 @@ bool QueryRunnerProduct::TableSize(int& blocks, int& tuples) {
   return true;
 }
 
+bool QueryRunnerProduct::HasSortNode() const {
+  return ChildRunner()->HasSortNode() || table_scan_child_->HasSortNode();
+}
+
 void QueryRunnerProduct::DeleteTemporaryRelations() {
   if (table_scan_child_ != nullptr) {
     table_scan_child_->DeleteTemporaryRelations();
