@@ -9,6 +9,7 @@ class QueryRunnerSelection : public QueryRunner {
   QueryRunnerSelection(QueryNode *query_node);
   ~QueryRunnerSelection();
 
+  bool Initialize(SqlErrors::Type& error_code) final;
   bool Run(QueryResultCallback callback, SqlErrors::Type& error_code) final;
   bool ResultCallback(QueryRunner *child, std::vector<Tuple>& tuples) final;
 

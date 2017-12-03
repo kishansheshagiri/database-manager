@@ -13,18 +13,21 @@ QueryRunnerSelection::QueryRunnerSelection(QueryNode *query_node)
 QueryRunnerSelection::~QueryRunnerSelection() {
 }
 
-bool QueryRunnerSelection::Run(QueryResultCallback callback,
-    SqlErrors::Type& error_code) {
+bool QueryRunnerSelection::Initialize(SqlErrors::Type& error_code) {
   if (Node() == nullptr || Node()->ChildrenCount() != 1) {
     DEBUG_MSG("");
     error_code = SqlErrors::ERROR_SELECTION;
     return false;
   }
 
-  SetCallback(callback);
-
   QueryNode *child_node = Node()->Child(0);
   SetChildRunner(Create(child_node));
+  return ChildRunner()->Initialize(error_code);
+}
+
+bool QueryRunnerSelection::Run(QueryResultCallback callback,
+    SqlErrors::Type& error_code) {
+  SetCallback(callback);
 
   if (!ChildRunner()->Run(
       std::bind(&QueryRunnerSelection::ResultCallback, this,

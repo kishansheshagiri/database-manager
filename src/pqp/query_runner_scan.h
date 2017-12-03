@@ -9,6 +9,7 @@ class QueryRunnerScan : public QueryRunner {
   QueryRunnerScan(QueryNode *query_node);
   ~QueryRunnerScan();
 
+  bool Initialize(SqlErrors::Type& error_code) final;
   bool Run(QueryResultCallback callback, SqlErrors::Type& error_code) final;
   void PassScanParams(ScanParams params) final;
   bool TableName(std::string& table_name) final;

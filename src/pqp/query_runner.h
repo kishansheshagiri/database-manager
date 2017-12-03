@@ -34,11 +34,13 @@ class QueryRunner {
   bool Print(QueryRunner *child, std::vector<Tuple>& tuples);
   QueryNode::QueryNodeType NodeType() const { return Node()->Type(); }
 
+  virtual bool Initialize(SqlErrors::Type& error_code) = 0;
   virtual bool Run(QueryResultCallback callback,
       SqlErrors::Type& error_code) = 0;
   virtual void PassScanParams(ScanParams params);
   virtual bool TableName(std::string& table_name);
   virtual bool TableSize(int& blocks, int& tuples);
+  virtual bool HasSortNode() const;
   virtual bool ResultCallback(QueryRunner *child,
       std::vector<Tuple>& tuples) = 0;
 

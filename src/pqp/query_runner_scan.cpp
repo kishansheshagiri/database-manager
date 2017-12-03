@@ -19,14 +19,18 @@ QueryRunnerScan::QueryRunnerScan(QueryNode *query_node)
 QueryRunnerScan::~QueryRunnerScan() {
 }
 
-bool QueryRunnerScan::Run(QueryResultCallback callback,
-    SqlErrors::Type& error_code) {
+bool QueryRunnerScan::Initialize(SqlErrors::Type& error_code) {
   if (Node() == nullptr || Node()->ChildrenCount() != 0) {
     DEBUG_MSG("");
     error_code = SqlErrors::ERROR_TABLE_SCAN;
     return false;
   }
 
+  return true;
+}
+
+bool QueryRunnerScan::Run(QueryResultCallback callback,
+    SqlErrors::Type& error_code) {
   SetCallback(callback);
 
   bool respond_once = false;

@@ -9,8 +9,10 @@ class QueryRunnerSort : public QueryRunner {
   QueryRunnerSort(QueryNode *query_node);
   ~QueryRunnerSort();
 
+  bool Initialize(SqlErrors::Type& error_code) final;
   bool Run(QueryResultCallback callback, SqlErrors::Type& error_code) final;
   void PassScanParams(ScanParams params) final;
+  bool HasSortNode() const final;
   bool ResultCallback(QueryRunner *child, std::vector<Tuple>& tuples) final;
 
 private:

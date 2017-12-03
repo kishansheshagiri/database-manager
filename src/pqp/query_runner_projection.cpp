@@ -12,18 +12,21 @@ QueryRunnerProjection::QueryRunnerProjection(QueryNode *query_node)
 QueryRunnerProjection::~QueryRunnerProjection() {
 }
 
-bool QueryRunnerProjection::Run(QueryResultCallback callback,
-    SqlErrors::Type& error_code) {
+bool QueryRunnerProjection::Initialize(SqlErrors::Type& error_code) {
   if (Node() == nullptr || Node()->ChildrenCount() != 1) {
     DEBUG_MSG("");
     error_code = SqlErrors::ERROR_PROJECTION;
     return false;
   }
 
-  SetCallback(callback);
-
   QueryNode *child_node = Node()->Child(0);
   SetChildRunner(Create(child_node));
+  return ChildRunner()->Initialize(error_code);
+}
+
+bool QueryRunnerProjection::Run(QueryResultCallback callback,
+    SqlErrors::Type& error_code) {
+  SetCallback(callback);
 
   return ChildRunner()->Run(
       std::bind(&QueryRunnerProjection::ResultCallback, this,

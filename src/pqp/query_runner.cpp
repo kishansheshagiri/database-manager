@@ -20,9 +20,10 @@ QueryRunner::~QueryRunner() {
 }
 
 bool QueryRunner::Start(SqlErrors::Type& error_code) {
-  if (!Run(std::bind(&QueryRunner::Print, this,
-                     std::placeholders::_1, std::placeholders::_2),
-             error_code)) {
+  if (!Initialize(error_code) || !Run(std::bind(&QueryRunner::Print, this,
+                                                std::placeholders::_1,
+                                                std::placeholders::_2),
+                                                error_code)) {
     DEBUG_MSG("");
     return false;
   }
@@ -102,6 +103,14 @@ bool QueryRunner::TableSize(int& blocks, int& tuples) {
   }
 
   return true;
+}
+
+bool QueryRunner::HasSortNode() const {
+  if (child_runner_) {
+    return child_runner_->HasSortNode();
+  }
+
+  return false;
 }
 
 void QueryRunner::DeleteTemporaryRelations() {

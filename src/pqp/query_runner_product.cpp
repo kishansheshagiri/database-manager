@@ -17,15 +17,12 @@ QueryRunnerProduct::~QueryRunnerProduct() {
   }
 }
 
-bool QueryRunnerProduct::Run(QueryResultCallback callback,
-    SqlErrors::Type& error_code) {
+bool QueryRunnerProduct::Initialize(SqlErrors::Type& error_code) {
   if (Node() == nullptr || Node()->ChildrenCount() != 2) {
     DEBUG_MSG("");
     error_code = SqlErrors::ERROR_CROSS_PRODUCT;
     return false;
   }
-
-  SetCallback(callback);
 
   QueryNode *left_child = Node()->Child(0);
   QueryNode *right_child = Node()->Child(1);
@@ -36,6 +33,19 @@ bool QueryRunnerProduct::Run(QueryResultCallback callback,
     SetChildRunner(Create(left_child));
     table_scan_child_ = Create(right_child);
   }
+
+  if (!ChildRunner()->Initialize(error_code) ||
+      !table_scan_child_->Initialize(error_code)) {
+    DEBUG_MSG("Failed to initialize");
+    return false;
+  }
+
+  return true;
+}
+
+bool QueryRunnerProduct::Run(QueryResultCallback callback,
+    SqlErrors::Type& error_code) {
+  SetCallback(callback);
 
   ScanParams params;
   params.num_blocks_ = 1;

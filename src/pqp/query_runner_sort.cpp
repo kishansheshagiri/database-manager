@@ -15,19 +15,21 @@ QueryRunnerSort::QueryRunnerSort(QueryNode *query_node)
 QueryRunnerSort::~QueryRunnerSort() {
 }
 
-bool QueryRunnerSort::Run(QueryResultCallback callback,
-    SqlErrors::Type& error_code) {
+bool QueryRunnerSort::Initialize(SqlErrors::Type& error_code) {
   if (Node() == nullptr || Node()->ChildrenCount() != 1) {
     DEBUG_MSG("");
     error_code = SqlErrors::ERROR_SORT;
     return false;
   }
 
-  DEBUG_MSG("");
-  SetCallback(callback);
-
   QueryNode *child_node = Node()->Child(0);
   SetChildRunner(Create(child_node));
+  return ChildRunner()->Initialize(error_code);
+}
+
+bool QueryRunnerSort::Run(QueryResultCallback callback,
+    SqlErrors::Type& error_code) {
+  SetCallback(callback);
 
   return ChildRunner()->Run(
       std::bind(&QueryRunnerSort::ResultCallback, this,
@@ -37,6 +39,10 @@ bool QueryRunnerSort::Run(QueryResultCallback callback,
 
 void QueryRunnerSort::PassScanParams(ScanParams params) {
   scan_params_ = params;
+}
+
+bool QueryRunnerSort::HasSortNode() const {
+  return true;
 }
 
 bool QueryRunnerSort::ResultCallback(QueryRunner *child,
