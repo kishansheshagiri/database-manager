@@ -43,6 +43,12 @@ bool QueryPlanBuilder::Build(SqlErrors::Type& error_code) {
 
   QueryNode *duplication_elimination_node = nullptr;
   if (distinct_) {
+    if (sort_node == nullptr) {
+      sort_node = createNode(nullptr, QueryNode::QUERY_NODE_TYPE_SORT);
+      sort_column_ = "*";
+      sort_node->SetSortColumn(sort_column_);
+    }
+
     duplication_elimination_node = createNode(nullptr,
         QueryNode::QUERY_NODE_TYPE_DUPLICATE_ELIMINATION);
   }
@@ -52,7 +58,6 @@ bool QueryPlanBuilder::Build(SqlErrors::Type& error_code) {
   projection_node->SetSelectList(select_list_);
 
   std::vector<QueryNode *> nodes = {
-      sort_node,
       duplication_elimination_node,
       projection_node
   };
@@ -82,14 +87,15 @@ bool QueryPlanBuilder::Build(SqlErrors::Type& error_code) {
   }
 
   if (!createProducts(0, QueryNode::QUERY_NODE_TYPE_CROSS_PRODUCT,
-      next_node, push_candidates)) {
+      next_node, push_candidates, sort_node)) {
     DEBUG_MSG("Failed to create products");
     error_code = SqlErrors::ERROR_SELECTION;
     return false;
   }
 
-  if (push_candidates.size() != 0) {
-    DEBUG_MSG("Push candidates not empty");
+  if (push_candidates.size() != 0 || sort_node != nullptr) {
+    DEBUG_MSG("Push candidates(" << push_candidates.size() <<
+        ")/sort node(" << (sort_node != nullptr) << ") not empty");
     error_code = SqlErrors::WHERE_CLAUSE_ERROR;
     return false;
   }
@@ -116,7 +122,7 @@ QueryNode *QueryPlanBuilder::createNode(QueryNode *parent,
 
 bool QueryPlanBuilder::createProducts(const int index,
     const QueryNode::QueryNodeType product_type, QueryNode *parent,
-    PushCandidates& push_candidates) {
+    PushCandidates& push_candidates, QueryNode *&sort_node) {
   if (index >= table_list_.size()) {
     return true;
   } else if (index < 0 ||
@@ -129,7 +135,8 @@ bool QueryPlanBuilder::createProducts(const int index,
   if (index == table_list_.size() - 1) {
     std::pair<QueryNode *, QueryNode *> node_endings = std::make_pair(
         nullptr, nullptr);
-    createPushCandidateNodes(push_candidates, table_list_[index], node_endings);
+    createPushCandidateNodes(push_candidates, sort_node,
+        table_list_[index], node_endings);
     if (node_endings.first != nullptr) {
       parent->AppendChild(node_endings.first);
     }
@@ -147,7 +154,8 @@ bool QueryPlanBuilder::createProducts(const int index,
 
   std::pair<QueryNode *, QueryNode *> node_endings = std::make_pair(
       nullptr, nullptr);
-  createPushCandidateNodes(push_candidates, table_list_[index], node_endings);
+  createPushCandidateNodes(push_candidates, sort_node,
+      table_list_[index], node_endings);
   if (node_endings.first != nullptr) {
     product_node->AppendChild(node_endings.first);
   }
@@ -159,15 +167,25 @@ bool QueryPlanBuilder::createProducts(const int index,
       next_child, QueryNode::QUERY_NODE_TYPE_TABLE_SCAN);
   table_scan_node->SetTableName(table_list_[index]);
 
-  return createProducts(index + 1, product_type, product_node, push_candidates);
+  return createProducts(index + 1, product_type, product_node, push_candidates,
+      sort_node);
 }
 
 void QueryPlanBuilder::createPushCandidateNodes(PushCandidates& push_candidates,
-    const std::string table_name,
+    QueryNode *&sort_node, const std::string table_name,
     std::pair<QueryNode *, QueryNode *>& node_endings) {
-  auto push_index = push_candidates.begin();
   std::vector<QueryNode *> push_candidate_nodes;
+  std::string sort_table_name, sort_attribute_name;
+  Tokenizer::SplitIntoTwo(sort_column_, '.',
+      sort_table_name, sort_attribute_name);
+  DEBUG_MSG("");
+  if (sort_node != nullptr && (
+      sort_table_name == table_name || sort_table_name == "*")) {
+    push_candidate_nodes.push_back(sort_node);
+    sort_node = nullptr;
+  }
 
+  auto push_index = push_candidates.begin();
   while (push_index != push_candidates.end()) {
     std::string candidate_table_name, candidate_attribute_name;
     Tokenizer::SplitIntoTwo((*push_index).first, '.',
