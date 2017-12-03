@@ -1,6 +1,7 @@
 #ifndef SRC_LQP_QUERY_PLAN_BUILDER_H
 #define SRC_LQP_QUERY_PLAN_BUILDER_H
 
+#include <unordered_map>
 #include <string>
 #include <vector>
 
@@ -21,10 +22,13 @@ class QueryPlanBuilder {
  private:
   QueryNode *createNode(QueryNode *parent,
       const QueryNode::QueryNodeType product_type);
-  bool createProducts(const int index,
-      const QueryNode::QueryNodeType product_type, QueryNode *parent,
+  bool createProducts(const int index, QueryNode *parent,
+      PushCandidates& push_candidates, QueryNode *&sort_node);
+  bool createJoins(QueryNode *parent, JoinAttributes join_attributes,
       PushCandidates& push_candidates, QueryNode *&sort_node);
 
+  bool validateJoinAttributes(const JoinAttributes join_attributes,
+      std::string& join_attribute_name);
   void createPushCandidateNodes(PushCandidates& push_candidates,
       QueryNode *&sort_node,
       const std::string table_name,

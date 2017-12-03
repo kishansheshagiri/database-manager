@@ -86,14 +86,17 @@ bool QueryPlanBuilder::Build(SqlErrors::Type& error_code) {
     next_node = selection_node;
   }
 
-  if (!createProducts(0, QueryNode::QUERY_NODE_TYPE_CROSS_PRODUCT,
-      next_node, push_candidates, sort_node)) {
+  bool joins_created = createJoins(next_node, join_attributes, push_candidates,
+      sort_node);
+
+  if (!joins_created && !createProducts(0, next_node, push_candidates,
+      sort_node)) {
     DEBUG_MSG("Failed to create products");
     error_code = SqlErrors::ERROR_SELECTION;
     return false;
   }
 
-  if (push_candidates.size() != 0 || sort_node != nullptr) {
+  if (push_candidates.size() != 0 || (sort_node != nullptr && !joins_created)) {
     DEBUG_MSG("Push candidates(" << push_candidates.size() <<
         ")/sort node(" << (sort_node != nullptr) << ") not empty");
     error_code = SqlErrors::WHERE_CLAUSE_ERROR;
@@ -120,14 +123,11 @@ QueryNode *QueryPlanBuilder::createNode(QueryNode *parent,
   return node;
 }
 
-bool QueryPlanBuilder::createProducts(const int index,
-    const QueryNode::QueryNodeType product_type, QueryNode *parent,
+bool QueryPlanBuilder::createProducts(const int index, QueryNode *parent,
     PushCandidates& push_candidates, QueryNode *&sort_node) {
   if (index >= table_list_.size()) {
     return true;
-  } else if (index < 0 ||
-      (product_type != QueryNode::QUERY_NODE_TYPE_CROSS_PRODUCT &&
-      product_type != QueryNode::QUERY_NODE_TYPE_NATURAL_JOIN)) {
+  } else if (index < 0) {
     DEBUG_MSG("");
     return false;
   }
@@ -150,7 +150,8 @@ bool QueryPlanBuilder::createProducts(const int index,
     return true;
   }
 
-  QueryNode *product_node = createNode(parent, product_type);
+  QueryNode *product_node = createNode(parent,
+      QueryNode::QUERY_NODE_TYPE_CROSS_PRODUCT);
 
   std::pair<QueryNode *, QueryNode *> node_endings = std::make_pair(
       nullptr, nullptr);
@@ -167,21 +168,123 @@ bool QueryPlanBuilder::createProducts(const int index,
       next_child, QueryNode::QUERY_NODE_TYPE_TABLE_SCAN);
   table_scan_node->SetTableName(table_list_[index]);
 
-  return createProducts(index + 1, product_type, product_node, push_candidates,
-      sort_node);
+  return createProducts(index + 1, product_node, push_candidates, sort_node);
+}
+
+bool QueryPlanBuilder::createJoins(QueryNode *parent,
+    JoinAttributes join_attributes, PushCandidates& push_candidates,
+    QueryNode *&sort_node) {
+  if (join_attributes.size() > 1) {
+    DEBUG_MSG("Join works with one column name");
+    return false;
+  }
+
+  if (table_list_.size() != 2) {
+    return false;
+  }
+
+  std::string join_attribute_name;
+  if (!validateJoinAttributes(join_attributes, join_attribute_name)) {
+    DEBUG_MSG("Invalid join attributes");
+    return false;
+  }
+
+  QueryNode *join_node = createNode(parent,
+      QueryNode::QUERY_NODE_TYPE_NATURAL_JOIN);
+
+  for (auto table : table_list_) {
+    std::pair<QueryNode *, QueryNode *> node_endings = std::make_pair(
+        nullptr, nullptr);
+
+    QueryNode *join_sort_node = nullptr;
+    if (sort_node != nullptr) {
+      std::string table_name_sort, attribute_name_sort;
+      Tokenizer::SplitIntoTwo(sort_column_, '.',
+          table_name_sort, attribute_name_sort);
+      if (table_name_sort == "*" || (table_name_sort == table &&
+          attribute_name_sort == join_attribute_name)) {
+        join_sort_node = sort_node;
+        sort_node = nullptr;
+      }
+    }
+
+    if (join_sort_node == nullptr) {
+      join_sort_node = createNode(nullptr, QueryNode::QUERY_NODE_TYPE_SORT);
+      join_sort_node->SetSortColumn(table + "." + join_attribute_name);
+    }
+
+    createPushCandidateNodes(push_candidates, join_sort_node, table,
+        node_endings);
+    if (node_endings.first != nullptr) {
+      join_node->AppendChild(node_endings.first);
+    }
+
+    QueryNode *table_scan_node = createNode(node_endings.second,
+        QueryNode::QUERY_NODE_TYPE_TABLE_SCAN);
+    table_scan_node->SetTableName(table);
+  }
+
+  return true;
+}
+
+bool QueryPlanBuilder::validateJoinAttributes(
+    const JoinAttributes join_attributes, std::string& join_attribute_name) {
+  if (join_attributes.empty()) {
+    DEBUG_MSG("Empty join attributes");
+    return false;
+  }
+
+  join_attribute_name.clear();
+  for (auto candidate_pair : join_attributes) {
+    std::string table_name_first, attribute_name_first;
+    Tokenizer::SplitIntoTwo(candidate_pair.first, '.',
+        table_name_first, attribute_name_first);
+
+    std::string table_name_second, attribute_name_second;
+    Tokenizer::SplitIntoTwo(candidate_pair.second, '.',
+        table_name_second, attribute_name_second);
+
+    if (table_name_first == table_name_second) {
+      DEBUG_MSG("");
+      return false;
+    }
+
+    if (attribute_name_first != attribute_name_second) {
+      DEBUG_MSG("");
+      return false;
+    }
+
+    if (join_attribute_name.empty()) {
+      join_attribute_name = attribute_name_first;
+    }
+
+    if (join_attribute_name != attribute_name_first) {
+      DEBUG_MSG("");
+      return false;
+    }
+  }
+
+  return true;
 }
 
 void QueryPlanBuilder::createPushCandidateNodes(PushCandidates& push_candidates,
     QueryNode *&sort_node, const std::string table_name,
     std::pair<QueryNode *, QueryNode *>& node_endings) {
   std::vector<QueryNode *> push_candidate_nodes;
-  std::string sort_table_name, sort_attribute_name;
-  Tokenizer::SplitIntoTwo(sort_column_, '.',
-      sort_table_name, sort_attribute_name);
-  if (sort_node != nullptr && (
-      sort_table_name == table_name || sort_table_name == "*")) {
-    push_candidate_nodes.push_back(sort_node);
-    sort_node = nullptr;
+  if (sort_node != nullptr) {
+    std::string sort_column_name, sort_table_name, sort_attribute_name;
+    if (sort_node->SortColumn(sort_column_name)) {
+      Tokenizer::SplitIntoTwo(sort_column_name, '.',
+          sort_table_name, sort_attribute_name);
+      if (sort_attribute_name.empty()) {
+        sort_table_name = table_list_[0];
+      }
+
+      if (sort_table_name == table_name || sort_table_name == "*") {
+        push_candidate_nodes.push_back(sort_node);
+        sort_node = nullptr;
+      }
+    }
   }
 
   auto push_index = push_candidates.begin();
