@@ -177,7 +177,7 @@ void QueryPlanBuilder::createPushCandidateNodes(PushCandidates& push_candidates,
           QueryNode::QUERY_NODE_TYPE_SELECTION);
       WhereClauseHelperSelect *where_helper = new WhereClauseHelperSelect(
           WhereClauseHelperSelect::WHERE_CLAUSE_HELPER_TYPE_BOOLEAN_FACTOR);
-      std::vector<std::string> table_list;
+      std::vector<std::string> table_list = { table_name };
       where_helper->Initialize((*push_index).second, table_list);
       push_candidate_node->SetWhereHelper(where_helper);
       push_candidate_nodes.push_back(push_candidate_node);

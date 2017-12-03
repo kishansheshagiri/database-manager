@@ -76,11 +76,20 @@ void WhereClauseHelperSelect::OptimizationCandidates(
 // Private methods
 std::string WhereClauseHelperSelect::HandleColumnName(
     SqlNode *column_name) {
-  std::string column_name_string;
+  std::string column_name_string, table_name, attribute_name;
   column_name->ColumnName(column_name_string);
 
+  Tokenizer::SplitIntoTwo(column_name_string, '.', table_name, attribute_name);
+  if (attribute_name.empty()) {
+    attribute_name = table_name;
+  }
+
+  if (table_list_.size() != 1) {
+    attribute_name = column_name_string;
+  }
+
   std::string field_value;
-  ValueFromTuple(column_name_string, field_value, error_code_);
+  ValueFromTuple(attribute_name, field_value, error_code_);
   return field_value;
 }
 
