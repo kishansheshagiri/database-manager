@@ -43,7 +43,7 @@ CREATE TABLE course2 (sid INT, exam INT, grade STR20)
 INSERT INTO course2 (sid, exam, grade) VALUES (1, 100, "A")
 INSERT INTO course2 (sid, exam, grade) VALUES (1, 100, "A")
 INSERT INTO course2 (sid, exam, grade) VALUES (1, 100, "E")
-SELECT * FROM course, course2 WHERE course.grade = "A" AND course.project = 69
+SELECT * FROM course, course2 WHERE course.grade = "A" OR course2.grade = "E"
 SELECT * FROM course, course2 WHERE course.sid = course2.sid ORDER BY course.exam
 SELECT * FROM course, course2 WHERE course.sid = course2.exam
 SELECT * FROM course, course2 WHERE course.sid = course2.exam AND course.sid < 2
