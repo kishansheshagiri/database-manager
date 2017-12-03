@@ -32,8 +32,13 @@ bool QueryRunnerScan::Run(QueryResultCallback callback,
   bool respond_once = false;
   std::vector<Block *> blocks;
 
-  int memory_start_index = scan_params_.use_begin_blocks_ ?
-          0 : Storage()->MainMemorySize() / 2;
+  if (scan_params_.start_index_ > Storage()->MainMemorySize()) {
+    ERROR_MSG("Main memory full");
+    error_code = SqlErrors::ERROR_TABLE_SCAN;
+    return false;
+  }
+
+  int memory_start_index = scan_params_.start_index_;
   int relation_start_index = 0;
   int num_blocks = scan_params_.num_blocks_ <= 0 ?
       Storage()->MainMemorySize() : scan_params_.num_blocks_;

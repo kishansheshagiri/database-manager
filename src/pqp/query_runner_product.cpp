@@ -37,16 +37,14 @@ bool QueryRunnerProduct::Run(QueryResultCallback callback,
     table_scan_child_ = Create(right_child);
   }
 
-  std::string table_name_first, table_name_second;
-  ChildRunner()->TableName(table_name_first);
-  table_scan_child_->TableName(table_name_second);
-
   ScanParams params;
-  if (ChildRunner()->NodeType() != QueryNode::QUERY_NODE_TYPE_CROSS_PRODUCT) {
-    params.num_blocks_ = 1;
-  }
-
+  params.num_blocks_ = 1;
+  int start_index = scan_params_.start_index_;
+  params.start_index_ = start_index;
   ChildRunner()->PassScanParams(params);
+
+  params.start_index_++;
+  table_scan_child_->PassScanParams(params);
 
   if (!ChildRunner()->Run(
       std::bind(&QueryRunnerProduct::ResultCallback, this,
@@ -73,14 +71,6 @@ bool QueryRunnerProduct::ResultCallback(QueryRunner *child,
 
   if (child == ChildRunner()) {
     first_tuples_ = tuples;
-    ScanParams params;
-    if (table_scan_child_->NodeType() != QueryNode::QUERY_NODE_TYPE_CROSS_PRODUCT) {
-      params.num_blocks_ = 1;
-      params.use_begin_blocks_ = false;
-    }
-
-    table_scan_child_->PassScanParams(params);
-
     if (!table_scan_child_->Run(
         std::bind(&QueryRunnerProduct::ResultCallback, this,
             std::placeholders::_1, std::placeholders::_2),
@@ -131,6 +121,18 @@ bool QueryRunnerProduct::ResultCallback(QueryRunner *child,
   return true;
 }
 
+void QueryRunnerProduct::PassScanParams(ScanParams params) {
+  scan_params_ = params;
+}
+
+bool QueryRunnerProduct::TableName(std::string& table_name) {
+  return true;
+}
+
+bool QueryRunnerProduct::TableSize(int& blocks, int& tuples) {
+  return true;
+}
+
 void QueryRunnerProduct::DeleteTemporaryRelations() {
   if (table_scan_child_ != nullptr) {
     table_scan_child_->DeleteTemporaryRelations();
@@ -147,7 +149,8 @@ bool QueryRunnerProduct::createIntermediateRelation(Tuple first, Tuple second,
   std::vector<enum FIELD_TYPE> field_types = schema_first.getFieldTypes();
 
   for (auto &field_name : field_names) {
-    field_name = table_name_first + "." + field_name;
+    if (!table_name_first.empty())
+      field_name = table_name_first + "." + field_name;
   }
 
   std::vector<std::string> field_names_second = schema_second.getFieldNames();
@@ -155,7 +158,8 @@ bool QueryRunnerProduct::createIntermediateRelation(Tuple first, Tuple second,
       schema_second.getFieldTypes();
 
   for (auto &field_name : field_names_second) {
-    field_name = table_name_second + "." + field_name;
+    if (!table_name_second.empty())
+      field_name = table_name_second + "." + field_name;
   }
 
   field_names.insert(field_names.end(),
@@ -168,6 +172,8 @@ bool QueryRunnerProduct::createIntermediateRelation(Tuple first, Tuple second,
     DEBUG_MSG("");
     return false;
   }
+
+  MarkTemporaryRelation(intermediate_relation_name_);
 
   return true;
 }
@@ -188,8 +194,11 @@ bool QueryRunnerProduct::mergeTuples(Tuple first, Tuple second,
     Schema schema = first.getSchema();
     if (schema.getFieldType(it) == INT) {
       merged_tuple.setField(it, first.getField(it).integer);
-    } else {
+    } else if (schema.getFieldType(it) == STR20) {
       merged_tuple.setField(it, *(first.getField(it).str));
+    } else {
+      DEBUG_MSG("");
+      return false;
     }
   }
 
@@ -198,9 +207,12 @@ bool QueryRunnerProduct::mergeTuples(Tuple first, Tuple second,
     if (schema.getFieldType(it) == INT) {
       merged_tuple.setField(
           first.getNumOfFields() + it, second.getField(it).integer);
-    } else {
+    } else if (schema.getFieldType(it) == STR20) {
       merged_tuple.setField(
           first.getNumOfFields() + it, *(second.getField(it).str));
+    } else {
+      DEBUG_MSG("");
+      return false;
     }
   }
 

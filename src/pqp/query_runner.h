@@ -17,12 +17,10 @@ typedef struct ScanParams {
   ScanParams()
     : one_pass_(true),
       multi_scan_(true),
-      use_begin_blocks_(true),
       start_index_(0),
       num_blocks_(-1) {}
   bool one_pass_;
   bool multi_scan_;
-  bool use_begin_blocks_;
   int start_index_;
   int num_blocks_;
 } ScanParams;

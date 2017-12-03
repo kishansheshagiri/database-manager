@@ -12,6 +12,10 @@ class QueryRunnerProduct : public QueryRunner {
   bool Run(QueryResultCallback callback, SqlErrors::Type& error_code) final;
   bool ResultCallback(QueryRunner *child, std::vector<Tuple>& tuples) final;
 
+  void PassScanParams(ScanParams params) final;
+  bool TableName(std::string& table_name) final;
+  bool TableSize(int& blocks, int& tuples) final;
+
   void DeleteTemporaryRelations() final;
 
 private:
@@ -19,6 +23,7 @@ private:
       std::string table_name_first, std::string table_name_second);
   bool mergeTuples(Tuple first, Tuple second, Tuple& merged_tuple);
 
+  ScanParams scan_params_;
   std::string intermediate_relation_name_;
   std::vector<Tuple> first_tuples_;
 
