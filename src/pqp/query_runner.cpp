@@ -79,13 +79,13 @@ bool QueryRunner::Print(QueryRunner *child,
 }
 
 void QueryRunner::PassScanParams(ScanParams params) {
-  if (child_runner_ && Node() && Node()->ChildrenCount() == 1) {
+  if (child_runner_) {
     child_runner_->PassScanParams(params);
   }
 }
 
 bool QueryRunner::TableName(std::string& table_name) {
-  if (child_runner_ && Node() && Node()->ChildrenCount() == 1) {
+  if (child_runner_) {
     return child_runner_->TableName(table_name);
   }
 
@@ -94,7 +94,7 @@ bool QueryRunner::TableName(std::string& table_name) {
 }
 
 bool QueryRunner::TableSize(int& blocks, int& tuples) {
-  if (child_runner_ && Node() && Node()->ChildrenCount() == 1) {
+  if (child_runner_) {
     return child_runner_->TableSize(blocks, tuples);
   }
 
@@ -103,7 +103,7 @@ bool QueryRunner::TableSize(int& blocks, int& tuples) {
 }
 
 bool QueryRunner::TableHeaders(std::vector<Tuple>& tuples) {
-  if (child_runner_ && Node() && Node()->ChildrenCount() == 1) {
+  if (child_runner_) {
     return child_runner_->TableHeaders(tuples);
   }
 

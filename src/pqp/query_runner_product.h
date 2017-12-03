@@ -16,6 +16,12 @@ class QueryRunnerProduct : public QueryRunner {
   void DeleteTemporaryRelations() final;
 
 private:
+  bool createIntermediateRelation(Tuple first, Tuple second,
+      std::string table_name_first, std::string table_name_second);
+  bool mergeTuples(Tuple first, Tuple second, Tuple& merged_tuple);
+
+  std::string intermediate_relation_name_;
+  std::vector<Tuple> first_tuples_;
 
   QueryRunner *table_scan_child_;
   SqlErrors::Type error_code_;

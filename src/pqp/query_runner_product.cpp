@@ -80,14 +80,21 @@ bool QueryRunnerProduct::Run(QueryResultCallback callback,
 
 bool QueryRunnerProduct::ResultCallback(QueryRunner *child,
     std::vector<Tuple>& tuples, bool headers) {
+  if (tuples.empty()) {
+    DEBUG_MSG("");
+    return true;
+  }
+
   if (child == ChildRunner()) {
+    first_tuples_ = tuples;
     ScanParams params;
-    if (ChildRunner()->NodeType() != QueryNode::QUERY_NODE_TYPE_CROSS_PRODUCT) {
+    if (table_scan_child_->NodeType() != QueryNode::QUERY_NODE_TYPE_CROSS_PRODUCT) {
       params.num_blocks_ = 1;
+      params.headers_disabled_ = true;
       params.use_begin_blocks_ = false;
     }
 
-    ChildRunner()->PassScanParams(params);
+    table_scan_child_->PassScanParams(params);
 
     if (!table_scan_child_->Run(
         std::bind(&QueryRunnerProduct::ResultCallback, this,
@@ -98,8 +105,39 @@ bool QueryRunnerProduct::ResultCallback(QueryRunner *child,
       error_code_ = SqlErrors::ERROR_CROSS_PRODUCT;
       return false;
     }
-  } else if (child == table_scan_child_) {
 
+    first_tuples_.clear();
+  } else if (child == table_scan_child_) {
+    std::vector<Tuple> output_tuples;
+    for (auto first_tuple : first_tuples_) {
+      for (auto second_tuple : tuples) {
+        if (intermediate_relation_name_.empty()) {
+          std::string table_name_first, table_name_second;
+          ChildRunner()->TableName(table_name_first);
+          table_scan_child_->TableName(table_name_second);
+
+          if (!createIntermediateRelation(first_tuple, second_tuple,
+              table_name_first, table_name_second)) {
+            DEBUG_MSG("");
+            error_code_ = SqlErrors::ERROR_CROSS_PRODUCT;
+            return false;
+          }
+        }
+
+        Tuple merged_tuple = Tuple::getDummyTuple();
+        if (!mergeTuples(first_tuple, second_tuple, merged_tuple)) {
+          DEBUG_MSG("");
+          error_code_ = SqlErrors::ERROR_CROSS_PRODUCT;
+          return false;
+        }
+
+        output_tuples.push_back(merged_tuple);
+      }
+    }
+
+    if (!output_tuples.empty()) {
+      return Callback()(this, output_tuples, headers);
+    }
   } else {
     DEBUG_MSG("");
     error_code_ = SqlErrors::ERROR_CROSS_PRODUCT;
@@ -115,4 +153,72 @@ void QueryRunnerProduct::DeleteTemporaryRelations() {
   }
 
   QueryRunner::DeleteTemporaryRelations();
+}
+
+bool QueryRunnerProduct::createIntermediateRelation(Tuple first, Tuple second,
+    std::string table_name_first, std::string table_name_second) {
+  Schema schema_first = first.getSchema();
+  Schema schema_second = second.getSchema();
+  std::vector<std::string> field_names = schema_first.getFieldNames();
+  std::vector<enum FIELD_TYPE> field_types = schema_first.getFieldTypes();
+
+  for (auto &field_name : field_names) {
+    field_name = table_name_first + "." + field_name;
+  }
+
+  std::vector<std::string> field_names_second = schema_second.getFieldNames();
+  std::vector<enum FIELD_TYPE> field_types_second =
+      schema_second.getFieldTypes();
+
+  for (auto &field_name : field_names_second) {
+    field_name = table_name_second + "." + field_name;
+  }
+
+  field_names.insert(field_names.end(),
+      field_names_second.begin(), field_names_second.end());
+  field_types.insert(field_types.end(),
+      field_types_second.begin(), field_types_second.end());
+
+  if (!Storage()->CreateDummyRelation("Product_", field_names, field_types,
+      intermediate_relation_name_)) {
+    DEBUG_MSG("");
+    return false;
+  }
+
+  return true;
+}
+
+bool QueryRunnerProduct::mergeTuples(Tuple first, Tuple second,
+    Tuple& merged_tuple) {
+  if (intermediate_relation_name_.empty()) {
+    DEBUG_MSG("");
+    return false;
+  }
+
+  if (!Storage()->CreateEmptyTuple(intermediate_relation_name_, merged_tuple)) {
+    DEBUG_MSG("");
+    return false;
+  }
+
+  for (auto it = 0; it < first.getNumOfFields(); it++) {
+    Schema schema = first.getSchema();
+    if (schema.getFieldType(it) == INT) {
+      merged_tuple.setField(it, first.getField(it).integer);
+    } else {
+      merged_tuple.setField(it, *(first.getField(it).str));
+    }
+  }
+
+  for (auto it = 0; it < second.getNumOfFields(); it++) {
+    Schema schema = second.getSchema();
+    if (schema.getFieldType(it) == INT) {
+      merged_tuple.setField(
+          first.getNumOfFields() + it, second.getField(it).integer);
+    } else {
+      merged_tuple.setField(
+          first.getNumOfFields() + it, *(second.getField(it).str));
+    }
+  }
+
+  return true;
 }

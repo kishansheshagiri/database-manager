@@ -105,6 +105,18 @@ bool StorageAdapter::DeleteRelation(const std::string& name) const {
   return schema_manager_->deleteRelation(name);
 }
 
+bool StorageAdapter::CreateEmptyTuple(const std::string& relation_name,
+    Tuple& tuple) const {
+  Relation *relation = schema_manager_->getRelation(relation_name);
+  if (relation == nullptr) {
+    DEBUG_MSG("Invalid relation name");
+    return false;
+  }
+
+  tuple = relation->createTuple();
+  return true;
+}
+
 Tuple StorageAdapter::CreateTuple(const std::string& relation_name,
     const std::vector<std::string>& values, bool& created) const {
   Relation *relation = schema_manager_->getRelation(relation_name);
@@ -330,8 +342,9 @@ bool StorageAdapter::ReadRelationBlocks(const std::string relation_name,
     return false;
   }
 
-  for (int index = memory_start_index; index < adjusted_num_blocks; index++) {
-    blocks.push_back(main_memory_->getBlock(index));
+  for (int it = memory_start_index;
+      it < memory_start_index + adjusted_num_blocks; it++) {
+    blocks.push_back(main_memory_->getBlock(it));
   }
 
   return true;
@@ -388,8 +401,20 @@ bool StorageAdapter::CreateDummyRelation(const std::string name_prefix,
   relation_name = name_prefix + std::to_string(rand());
   std::vector<enum FIELD_TYPE> field_types(field_names.size(), STR20);
 
-  if (!CreateRelation(relation_name,
-      field_names, field_types)) {
+  if (!CreateRelation(relation_name, field_names, field_types)) {
+    DEBUG_MSG("");
+    return false;
+  }
+
+  return true;
+}
+
+bool StorageAdapter::CreateDummyRelation(const std::string name_prefix,
+    std::vector<std::string>& field_names,
+    std::vector<enum FIELD_TYPE>& field_types, std::string& relation_name) {
+  relation_name = name_prefix + std::to_string(rand());
+
+  if (!CreateRelation(relation_name, field_names, field_types)) {
     DEBUG_MSG("");
     return false;
   }
