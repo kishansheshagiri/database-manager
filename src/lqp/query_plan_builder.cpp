@@ -88,6 +88,13 @@ bool QueryPlanBuilder::Build(SqlErrors::Type& error_code) {
 
   bool joins_created = createJoins(next_node, join_attributes, push_candidates,
       sort_node);
+  if (sort_node != nullptr) {
+    QueryNode *next_child = next_node->Child(0);
+    next_node->RemoveChild(next_child);
+    next_node->AppendChild(sort_node);
+    sort_node->AppendChild(next_child);
+    sort_node = nullptr;
+  }
 
   if (!joins_created && !createProducts(0, next_node, push_candidates,
       sort_node)) {
@@ -96,7 +103,7 @@ bool QueryPlanBuilder::Build(SqlErrors::Type& error_code) {
     return false;
   }
 
-  if (push_candidates.size() != 0 || (sort_node != nullptr && !joins_created)) {
+  if (push_candidates.size() != 0 || sort_node != nullptr) {
     DEBUG_MSG("Push candidates(" << push_candidates.size() <<
         ")/sort node(" << (sort_node != nullptr) << ") not empty");
     error_code = SqlErrors::WHERE_CLAUSE_ERROR;
