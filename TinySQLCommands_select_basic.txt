@@ -2,9 +2,6 @@ CREATE TABLE course (sid INT, homework INT, project INT, exam INT, grade STR20)
 INSERT INTO course (sid, homework, project, exam, grade) VALUES (1, 99, 100, 100, "A")
 INSERT INTO course (sid, homework, project, exam, grade) VALUES (2, NULL, 100, 100, "E")
 INSERT INTO course (sid, grade, exam, project, homework) VALUES (3, "E", 100, 100, 100)
-CREATE TABLE course2 (sid INT, exam INT, grade STR20)
-INSERT INTO course2 (sid, exam, grade) VALUES (1, 100, "A")
-SELECT * FROM course, course2
 SELECT * FROM course
 INSERT INTO course (sid, homework, project, exam, grade) VALUES (1, 99, 100, 100, "A")
 INSERT INTO course (sid, homework, project, exam, grade) VALUES (1, 99, 100, 100, "A")
@@ -42,12 +39,11 @@ DELETE FROM course WHERE grade = "E"
 SELECT * FROM course
 SELECT * FROM course WHERE grade = "E"
 SELECT sid, grade FROM course WHERE exam = 100
-SELECT DISTINCT grade FROM course
 CREATE TABLE course2 (sid INT, exam INT, grade STR20)
 INSERT INTO course2 (sid, exam, grade) VALUES (1, 100, "A")
 INSERT INTO course2 (sid, exam, grade) VALUES (1, 100, "A")
 INSERT INTO course2 (sid, exam, grade) VALUES (1, 100, "E")
-SELECT * FROM course2
+SELECT * FROM course, course2 WHERE course.grade = "A" AND course.project = 69
 SELECT * FROM course, course2 WHERE course.sid = course2.sid ORDER BY course.exam
 SELECT * FROM course, course2 WHERE course.sid = course2.exam
 SELECT * FROM course, course2 WHERE course.sid = course2.exam AND course.sid < 2
