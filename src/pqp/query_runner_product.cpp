@@ -41,30 +41,16 @@ bool QueryRunnerProduct::Run(QueryResultCallback callback,
   ChildRunner()->TableName(table_name_first);
   table_scan_child_->TableName(table_name_second);
 
-  std::vector<Tuple> headers_first, headers_second;
-  ChildRunner()->TableHeaders(headers_first);
-  table_scan_child_->TableHeaders(headers_second);
-
-  std::vector<Tuple> merged_headers;
-  if (!MergeTableHeaders(headers_first, table_name_first,
-      headers_second, table_name_second, merged_headers)) {
-    DEBUG_MSG("");
-    return false;
-  }
-
   ScanParams params;
-  params.headers_disabled_ = true;
   if (ChildRunner()->NodeType() != QueryNode::QUERY_NODE_TYPE_CROSS_PRODUCT) {
     params.num_blocks_ = 1;
   }
 
   ChildRunner()->PassScanParams(params);
 
-  Callback()(this, merged_headers, true);
-
   if (!ChildRunner()->Run(
       std::bind(&QueryRunnerProduct::ResultCallback, this,
-          std::placeholders::_1, std::placeholders::_2, std::placeholders::_3),
+          std::placeholders::_1, std::placeholders::_2),
       error_code)) {
     DEBUG_MSG("");
     if (error_code_ == SqlErrors::NO_ERROR) {
@@ -79,7 +65,7 @@ bool QueryRunnerProduct::Run(QueryResultCallback callback,
 }
 
 bool QueryRunnerProduct::ResultCallback(QueryRunner *child,
-    std::vector<Tuple>& tuples, bool headers) {
+    std::vector<Tuple>& tuples) {
   if (tuples.empty()) {
     DEBUG_MSG("");
     return true;
@@ -90,7 +76,6 @@ bool QueryRunnerProduct::ResultCallback(QueryRunner *child,
     ScanParams params;
     if (table_scan_child_->NodeType() != QueryNode::QUERY_NODE_TYPE_CROSS_PRODUCT) {
       params.num_blocks_ = 1;
-      params.headers_disabled_ = true;
       params.use_begin_blocks_ = false;
     }
 
@@ -98,8 +83,7 @@ bool QueryRunnerProduct::ResultCallback(QueryRunner *child,
 
     if (!table_scan_child_->Run(
         std::bind(&QueryRunnerProduct::ResultCallback, this,
-            std::placeholders::_1, std::placeholders::_2,
-            std::placeholders::_3),
+            std::placeholders::_1, std::placeholders::_2),
         error_code_)) {
       DEBUG_MSG("");
       error_code_ = SqlErrors::ERROR_CROSS_PRODUCT;
@@ -136,7 +120,7 @@ bool QueryRunnerProduct::ResultCallback(QueryRunner *child,
     }
 
     if (!output_tuples.empty()) {
-      return Callback()(this, output_tuples, headers);
+      return Callback()(this, output_tuples);
     }
   } else {
     DEBUG_MSG("");

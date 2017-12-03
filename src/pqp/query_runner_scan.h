@@ -13,9 +13,7 @@ class QueryRunnerScan : public QueryRunner {
   void PassScanParams(ScanParams params) final;
   bool TableName(std::string& table_name) final;
   bool TableSize(int& blocks, int& tuples) final;
-  bool TableHeaders(std::vector<Tuple>& tuples) final;
-  bool ResultCallback(QueryRunner *child,
-      std::vector<Tuple>& tuples, bool headers) final;
+  bool ResultCallback(QueryRunner *child, std::vector<Tuple>& tuples) final;
 
 private:
   std::string table_name_;

@@ -21,8 +21,7 @@ QueryRunner::~QueryRunner() {
 
 bool QueryRunner::Start(SqlErrors::Type& error_code) {
   if (!Run(std::bind(&QueryRunner::Print, this,
-                     std::placeholders::_1, std::placeholders::_2,
-                     std::placeholders::_3),
+                     std::placeholders::_1, std::placeholders::_2),
              error_code)) {
     DEBUG_MSG("");
     return false;
@@ -33,11 +32,16 @@ bool QueryRunner::Start(SqlErrors::Type& error_code) {
   return false;
 }
 
-bool QueryRunner::Print(QueryRunner *child,
-    std::vector<Tuple>& tuples, bool headers) {
-  if (headers) {
-    Tuple field_names = tuples[0];
-    int field_count = field_names.getNumOfFields();
+bool QueryRunner::Print(QueryRunner *child, std::vector<Tuple>& tuples) {
+  if (tuples.empty()) {
+    return true;
+  }
+
+  if (fields_printed_ == 0) {
+    Tuple tuple = tuples[0];
+    int field_count = tuple.getNumOfFields();
+    Schema schema = tuple.getSchema();
+
     ERROR_MSG_SINGLE_LINE("\n");
     ERROR_MSG_SINGLE_LINE(
         "+" << std::string(19 * field_count, '-') << "+");
@@ -45,7 +49,7 @@ bool QueryRunner::Print(QueryRunner *child,
 
     for (int index = 0; index < field_count; index++) {
       ERROR_MSG_SINGLE_LINE("|" << setw(18) << std::left <<
-          *(field_names.getField(index).str));
+          schema.getFieldName(index));
     }
 
     ERROR_MSG_SINGLE_LINE(" |\n");
@@ -54,25 +58,25 @@ bool QueryRunner::Print(QueryRunner *child,
     ERROR_MSG_SINGLE_LINE("\n");
 
     fields_printed_ = field_count;
-  } else {
-    for (auto tuple : tuples) {
-      for (int index = 0; index < tuple.getNumOfFields(); index++) {
-        std::string field_value;
-        if (tuple.getSchema().getFieldType(index) == INT) {
-          int value = tuple.getField(index).integer;
-          field_value = std::to_string(value);
-          if (value == -1) {
-            field_value = "NULL";
-          }
-        } else if (tuple.getSchema().getFieldType(index) == STR20) {
-          field_value = *(tuple.getField(index).str);
-        }
+  }
 
-        ERROR_MSG_SINGLE_LINE("|" << setw(18) << std::left << field_value);
+  for (auto tuple : tuples) {
+    for (int index = 0; index < tuple.getNumOfFields(); index++) {
+      std::string field_value;
+      if (tuple.getSchema().getFieldType(index) == INT) {
+        int value = tuple.getField(index).integer;
+        field_value = std::to_string(value);
+        if (value == -1) {
+          field_value = "NULL";
+        }
+      } else if (tuple.getSchema().getFieldType(index) == STR20) {
+        field_value = *(tuple.getField(index).str);
       }
 
-      ERROR_MSG_SINGLE_LINE(" |\n");
+      ERROR_MSG_SINGLE_LINE("|" << setw(18) << std::left << field_value);
     }
+
+    ERROR_MSG_SINGLE_LINE(" |\n");
   }
 
   return true;
@@ -89,8 +93,7 @@ bool QueryRunner::TableName(std::string& table_name) {
     return child_runner_->TableName(table_name);
   }
 
-  DEBUG_MSG("");
-  return false;
+  return true;
 }
 
 bool QueryRunner::TableSize(int& blocks, int& tuples) {
@@ -98,17 +101,7 @@ bool QueryRunner::TableSize(int& blocks, int& tuples) {
     return child_runner_->TableSize(blocks, tuples);
   }
 
-  DEBUG_MSG("");
-  return false;
-}
-
-bool QueryRunner::TableHeaders(std::vector<Tuple>& tuples) {
-  if (child_runner_) {
-    return child_runner_->TableHeaders(tuples);
-  }
-
-  DEBUG_MSG("");
-  return false;
+  return true;
 }
 
 void QueryRunner::DeleteTemporaryRelations() {

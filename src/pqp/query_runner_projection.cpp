@@ -27,12 +27,12 @@ bool QueryRunnerProjection::Run(QueryResultCallback callback,
 
   return ChildRunner()->Run(
       std::bind(&QueryRunnerProjection::ResultCallback, this,
-          std::placeholders::_1, std::placeholders::_2, std::placeholders::_3),
+          std::placeholders::_1, std::placeholders::_2),
       error_code);
 }
 
 bool QueryRunnerProjection::ResultCallback(QueryRunner *child,
-    std::vector<Tuple>& tuples, bool headers) {
+    std::vector<Tuple>& tuples) {
   std::vector<std::string> select_list;
   if (!Node()->SelectList(select_list)) {
     DEBUG_MSG("");
@@ -40,7 +40,7 @@ bool QueryRunnerProjection::ResultCallback(QueryRunner *child,
   }
 
   if (select_list.size() == 1 && select_list[0] == "*") {
-    return Callback()(this, tuples, headers);
+    return Callback()(this, tuples);
   }
 
   std::string temp_relation_name;
@@ -81,7 +81,7 @@ bool QueryRunnerProjection::ResultCallback(QueryRunner *child,
     output_tuples.push_back(output_tuple);
   }
 
-  if (!Callback()(this, output_tuples, headers)) {
+  if (!Callback()(this, output_tuples)) {
     DEBUG_MSG("");
     return false;
   }

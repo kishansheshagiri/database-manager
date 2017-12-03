@@ -29,17 +29,6 @@ bool QueryRunnerScan::Run(QueryResultCallback callback,
 
   SetCallback(callback);
 
-  std::vector<Tuple> headers;
-  if (!scan_params_.headers_disabled_) {
-    if (!TableHeaders(headers)) {
-      DEBUG_MSG("");
-      error_code = SqlErrors::ERROR_TABLE_SCAN;
-      return false;
-    }
-
-    Callback()(this, headers, true);
-  }
-
   bool respond_once = false;
   std::vector<Block *> blocks;
 
@@ -58,7 +47,7 @@ bool QueryRunnerScan::Run(QueryResultCallback callback,
       block->clear();
     }
 
-    if (!Callback()(this, tuples, false)) {
+    if (!Callback()(this, tuples)) {
       DEBUG_MSG("");
       return false;
     }
@@ -107,35 +96,8 @@ bool QueryRunnerScan::TableSize(int& blocks, int& tuples) {
   return true;
 }
 
-bool QueryRunnerScan::TableHeaders(std::vector<Tuple>& tuples) {
-  std::vector<std::string> field_names;
-  if (!Storage()->RelationFieldNames(table_name_, field_names)) {
-    DEBUG_MSG("");
-    return false;
-  }
-
-  std::string temp_relation_name;
-  if (!Storage()->CreateDummyRelation("Scan_", field_names,
-      temp_relation_name)) {
-    DEBUG_MSG("");
-    return false;
-  }
-
-  bool created = false;
-  Tuple field_name_tuple = Storage()->CreateTuple(
-      temp_relation_name, field_names, created);
-  if (!created) {
-    DEBUG_MSG("");
-    return false;
-  }
-
-  tuples.push_back(field_name_tuple);
-
-  return true;
-}
-
 bool QueryRunnerScan::ResultCallback(QueryRunner *child,
-    std::vector<Tuple>& tuples, bool headers) {
+    std::vector<Tuple>& tuples) {
   DEBUG_MSG("EMPTY FUNCTION");
   return true;
 }
