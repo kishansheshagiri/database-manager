@@ -57,6 +57,9 @@ class StorageAdapter {
       std::vector<std::string>& field_names,
       std::vector<enum FIELD_TYPE>& field_types, std::string& relation_name);
   bool DeleteDummyRelation(std::string relation_name);
+  void ClearBlock(int index) const;
+  bool AppendTupleUsing(const std::string relation_name, Tuple& tuple,
+      const int index) const;
   bool RelationFieldNames(std::string relation_name,
       std::vector<std::string>& field_names);
 

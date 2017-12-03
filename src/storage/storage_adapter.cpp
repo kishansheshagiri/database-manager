@@ -426,6 +426,36 @@ bool StorageAdapter::DeleteDummyRelation(std::string relation_name) {
   return schema_manager_->deleteRelation(relation_name);
 }
 
+void StorageAdapter::ClearBlock(int index) const {
+  if (index < MainMemorySize()) {
+    Block *block = main_memory_->getBlock(index);
+    block->clear();
+  }
+}
+
+bool StorageAdapter::AppendTupleUsing(const std::string relation_name,
+    Tuple& tuple, const int index) const {
+  if (index >= MainMemorySize()) {
+    DEBUG_MSG("Overflow. Invalid memory block.");
+    return false;
+  }
+
+  Relation *relation = schema_manager_->getRelation(relation_name);
+  if (relation == nullptr) {
+    DEBUG_MSG("Invalid relation name: " << relation_name);
+    return false;
+  }
+
+  Block *block = main_memory_->getBlock(index);
+  if (block->isFull()) {
+    relation->setBlock(relation->getNumOfBlocks(), index);
+    block->clear();
+  }
+
+  block->appendTuple(tuple);
+  return true;
+}
+
 bool StorageAdapter::RelationFieldNames(std::string relation_name,
     std::vector<std::string>& field_names) {
   Relation *relation = schema_manager_->getRelation(relation_name);
