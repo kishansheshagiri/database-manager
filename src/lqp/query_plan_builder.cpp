@@ -45,7 +45,7 @@ bool QueryPlanBuilder::Build(SqlErrors::Type& error_code) {
   if (distinct_) {
     if (sort_node == nullptr) {
       sort_node = createNode(nullptr, QueryNode::QUERY_NODE_TYPE_SORT);
-      sort_column_ = "*";
+      sort_column_ = select_list_[0];
       sort_node->SetSortColumn(sort_column_);
     }
 
@@ -79,28 +79,34 @@ bool QueryPlanBuilder::Build(SqlErrors::Type& error_code) {
   if (where_node_) {
     where_helper_->OptimizationCandidates(push_candidates,
       join_attributes);
-
-    QueryNode *selection_node = createNode(next_node,
-        QueryNode::QUERY_NODE_TYPE_SELECTION);
-    selection_node->SetWhereHelper(where_helper_);
-    next_node = selection_node;
   }
 
   bool joins_created = createJoins(next_node, join_attributes, push_candidates,
       sort_node);
+
+  if (!joins_created) {
+    if (where_node_) {
+      QueryNode *selection_node = createNode(next_node,
+          QueryNode::QUERY_NODE_TYPE_SELECTION);
+      selection_node->SetWhereHelper(where_helper_);
+      next_node = selection_node;
+    }
+
+    if (!createProducts(0, next_node, push_candidates,
+        sort_node)) {
+      DEBUG_MSG("Failed to create products");
+      error_code = SqlErrors::ERROR_SELECTION;
+      return false;
+    }
+  }
+
   if (sort_node != nullptr) {
     QueryNode *next_child = next_node->Child(0);
     next_node->RemoveChild(next_child);
     next_node->AppendChild(sort_node);
     sort_node->AppendChild(next_child);
+    next_node = sort_node;
     sort_node = nullptr;
-  }
-
-  if (!joins_created && !createProducts(0, next_node, push_candidates,
-      sort_node)) {
-    DEBUG_MSG("Failed to create products");
-    error_code = SqlErrors::ERROR_SELECTION;
-    return false;
   }
 
   if (push_candidates.size() != 0 || sort_node != nullptr) {
@@ -197,9 +203,10 @@ bool QueryPlanBuilder::createJoins(QueryNode *parent,
   }
 
   QueryNode *join_node = createNode(parent,
-      QueryNode::QUERY_NODE_TYPE_NATURAL_JOIN);
+      QueryNode::QUERY_NODE_TYPE_CROSS_PRODUCT);
 
   for (auto table : table_list_) {
+    QueryNode *next_node = join_node;
     std::pair<QueryNode *, QueryNode *> node_endings = std::make_pair(
         nullptr, nullptr);
 
@@ -217,16 +224,17 @@ bool QueryPlanBuilder::createJoins(QueryNode *parent,
 
     if (join_sort_node == nullptr) {
       join_sort_node = createNode(nullptr, QueryNode::QUERY_NODE_TYPE_SORT);
-      join_sort_node->SetSortColumn(table + "." + join_attribute_name);
     }
 
+    join_sort_node->SetSortColumn(join_attribute_name);
     createPushCandidateNodes(push_candidates, join_sort_node, table,
         node_endings);
     if (node_endings.first != nullptr) {
-      join_node->AppendChild(node_endings.first);
+      next_node->AppendChild(node_endings.first);
+      next_node = node_endings.second;
     }
 
-    QueryNode *table_scan_node = createNode(node_endings.second,
+    QueryNode *table_scan_node = createNode(next_node,
         QueryNode::QUERY_NODE_TYPE_TABLE_SCAN);
     table_scan_node->SetTableName(table);
   }
@@ -284,10 +292,16 @@ void QueryPlanBuilder::createPushCandidateNodes(PushCandidates& push_candidates,
       Tokenizer::SplitIntoTwo(sort_column_name, '.',
           sort_table_name, sort_attribute_name);
       if (sort_attribute_name.empty()) {
+        sort_attribute_name = sort_table_name;
         sort_table_name = table_list_[0];
       }
 
       if (sort_table_name == table_name || sort_table_name == "*") {
+        if (sort_table_name == "*") {
+          sort_node->SetSortColumn("*");
+        } else {
+          sort_node->SetSortColumn(sort_attribute_name);
+        }
         push_candidate_nodes.push_back(sort_node);
         sort_node = nullptr;
       }
