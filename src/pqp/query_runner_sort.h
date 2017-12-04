@@ -1,6 +1,7 @@
 #ifndef SRC_PQP_QUERY_RUNNER_SORT_H
 #define SRC_PQP_QUERY_RUNNER_SORT_H
 
+#include <string>
 #include <vector>
 
 #include "base/sql_errors.h"
@@ -26,6 +27,7 @@ private:
 
   std::string column_name_;
   std::string intermediate_relation_name_;
+  int block_size_;
   int tuples_per_block_;
   std::vector<int> sublist_size_list_;
 

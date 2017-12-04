@@ -40,6 +40,7 @@ typedef struct CompareTuples {
 
 QueryRunnerSort::QueryRunnerSort(QueryNode *query_node)
   : QueryRunner(query_node),
+    block_size_(-1),
     tuples_per_block_(-1),
     memory_constraint_(Storage()->MainMemorySize() - 1),
     scan_params_passed_(false),
@@ -70,8 +71,14 @@ bool QueryRunnerSort::Run(QueryResultCallback callback,
     SqlErrors::Type& error_code) {
   SetCallback(callback);
 
-  if (scan_params_passed_) {
-    scan_params_.start_index_ = 0;
+  if (scan_params_passed_ && (scan_params_.num_blocks_ == 1 ||
+      scan_params_.num_blocks_ + scan_params_.start_index_ - 1 >
+          memory_constraint_)) {
+    scan_params_.num_blocks_ = memory_constraint_ - scan_params_.start_index_;
+    memory_constraint_ = scan_params_.num_blocks_;
+  }
+
+  if (!scan_params_passed_) {
     scan_params_.num_blocks_ = memory_constraint_;
   }
 
@@ -84,6 +91,10 @@ bool QueryRunnerSort::Run(QueryResultCallback callback,
     DEBUG_MSG("");
     error_code = SqlErrors::ERROR_SORT;
     return false;
+  }
+
+  if (block_size_ >= 0 && block_size_ <= memory_constraint_) {
+    return true;
   }
 
   std::vector<int> sublist_block_indices(sublist_size_list_.size(), 0);
@@ -161,6 +172,12 @@ bool QueryRunnerSort::ResultCallback(QueryRunner *child,
 
   if (tuples_per_block_ == -1) {
     tuples_per_block_ = tuples[0].getSchema().getTuplesPerBlock();
+  }
+
+  int tuple_size;
+  if (TableSize(block_size_, tuple_size) && block_size_ <= memory_constraint_) {
+    std::sort(tuples.begin(), tuples.end(), CompareTuples(this));
+    return Callback()(this, tuples);
   }
 
   if (intermediate_relation_name_.empty()) {
