@@ -42,6 +42,10 @@ bool QueryRunnerProjection::ResultCallback(QueryRunner *child,
     return false;
   }
 
+  if (tuples.empty()) {
+    return true;
+  }
+
   if (select_list.size() == 1 && select_list[0] == "*") {
     return Callback()(this, tuples);
   }

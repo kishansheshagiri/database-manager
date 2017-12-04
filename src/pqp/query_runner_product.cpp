@@ -26,7 +26,8 @@ bool QueryRunnerProduct::Initialize(SqlErrors::Type& error_code) {
 
   QueryNode *left_child = Node()->Child(0);
   QueryNode *right_child = Node()->Child(1);
-  if (right_child->Type() == QueryNode::QUERY_NODE_TYPE_CROSS_PRODUCT) {
+  if (right_child->Type() == QueryNode::QUERY_NODE_TYPE_CROSS_PRODUCT ||
+      right_child->Type() == QueryNode::QUERY_NODE_TYPE_SORT) {
     SetChildRunner(Create(right_child));
     table_scan_child_ = Create(left_child);
   } else {
@@ -75,7 +76,6 @@ bool QueryRunnerProduct::Run(QueryResultCallback callback,
 bool QueryRunnerProduct::ResultCallback(QueryRunner *child,
     std::vector<Tuple>& tuples) {
   if (tuples.empty()) {
-    DEBUG_MSG("");
     return true;
   }
 
@@ -136,11 +136,11 @@ void QueryRunnerProduct::PassScanParams(ScanParams params) {
 }
 
 bool QueryRunnerProduct::TableName(std::string& table_name) {
-  return true;
+  return false;
 }
 
 bool QueryRunnerProduct::TableSize(int& blocks, int& tuples) {
-  return true;
+  return false;
 }
 
 bool QueryRunnerProduct::HasSortNode() const {

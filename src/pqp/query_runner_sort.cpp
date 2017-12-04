@@ -5,7 +5,6 @@
 #include <vector>
 
 #include "base/debug.h"
-#include "pqp/where_clause_helper_select.h"
 #include "storage/storage_manager_headers.h"
 
 typedef struct CompareTuples {

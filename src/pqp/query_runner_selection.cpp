@@ -53,6 +53,10 @@ bool QueryRunnerSelection::ResultCallback(QueryRunner *child,
     return false;
   }
 
+  if (tuples.empty()) {
+    return true;
+  }
+
   auto tuple_index = tuples.begin();
   while (tuple_index != tuples.end()) {
     if (!where_helper->Evaluate(&*tuple_index, error_code_)) {
