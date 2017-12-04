@@ -1,5 +1,6 @@
 #include "pqp/query_runner_factory.h"
 
+#include "pqp/query_runner_natural_join.h"
 #include "pqp/query_runner_product.h"
 #include "pqp/query_runner_projection.h"
 #include "pqp/query_runner_scan.h"
@@ -27,6 +28,8 @@ QueryRunner *QueryRunnerFactory::Create() const {
       return new QueryRunnerSelection(query_node_);
     case QueryNode::QUERY_NODE_TYPE_CROSS_PRODUCT:
       return new QueryRunnerProduct(query_node_);
+    case QueryNode::QUERY_NODE_TYPE_NATURAL_JOIN:
+      return new QueryRunnerNaturalJoin(query_node_);
     default:
       return nullptr;
   }

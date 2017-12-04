@@ -77,7 +77,8 @@ void QueryNode::SetTableName(const std::string& table_name) {
 }
 
 void QueryNode::SetSortColumn(const std::string& sort_column) {
-  if (type_ != QueryNode::QUERY_NODE_TYPE_SORT) {
+  if (type_ != QueryNode::QUERY_NODE_TYPE_SORT &&
+      type_ != QueryNode::QUERY_NODE_TYPE_NATURAL_JOIN) {
     DEBUG_MSG("");
     return;
   }
@@ -116,7 +117,8 @@ bool QueryNode::TableName(std::string& table_name) {
 }
 
 bool QueryNode::SortColumn(std::string& sort_column) {
-  if (type_ != QueryNode::QUERY_NODE_TYPE_SORT) {
+  if (type_ != QueryNode::QUERY_NODE_TYPE_SORT &&
+      type_ != QueryNode::QUERY_NODE_TYPE_NATURAL_JOIN) {
     DEBUG_MSG("");
     return false;
   }

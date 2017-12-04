@@ -23,6 +23,7 @@ SOURCES = StorageManager.cpp \
 					query_plan_builder.cpp \
 					query_runner.cpp \
 					query_runner_factory.cpp \
+					query_runner_natural_join.cpp \
 					query_runner_product.cpp \
 					query_runner_projection.cpp \
 					query_runner_scan.cpp \
@@ -40,6 +41,7 @@ SOURCES = StorageManager.cpp \
 					statement_select.cpp \
 					storage_adapter.cpp \
 					tokenizer.cpp \
+					tuple_helper.cpp \
 					where_clause_helper.cpp \
 					where_clause_helper_delete.cpp \
 					where_clause_helper_select.cpp

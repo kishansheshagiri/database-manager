@@ -203,7 +203,9 @@ bool QueryPlanBuilder::createJoins(QueryNode *parent,
   }
 
   QueryNode *join_node = createNode(parent,
-      QueryNode::QUERY_NODE_TYPE_CROSS_PRODUCT);
+      QueryNode::QUERY_NODE_TYPE_NATURAL_JOIN);
+  join_node->SetWhereHelper(where_helper_);
+  join_node->SetSortColumn(join_attribute_name);
 
   for (auto table : table_list_) {
     QueryNode *next_node = join_node;

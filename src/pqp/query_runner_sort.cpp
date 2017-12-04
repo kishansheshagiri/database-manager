@@ -9,50 +9,6 @@
 #include "pqp/tuple_helper.h"
 #include "storage/storage_manager_headers.h"
 
-typedef struct CompareTuples {
-  CompareTuples(const QueryRunnerSort *query_runner, std::vector<Tuple> tuples)
-      : query_runner_(query_runner),
-        tuples_(tuples){ }
-  const QueryRunnerSort *query_runner_;
-  const std::vector<Tuple> tuples_;
-
-  bool operator() (size_t first_index, size_t second_index) const {
-    if (first_index >= tuples_.size() || second_index >= tuples_.size()) {
-      DEBUG_MSG("");
-      return false;
-    }
-
-    Tuple first = tuples_[first_index];
-    Tuple second = tuples_[second_index];
-    if (first.isNull()) {
-      return false;
-    } else if (second.isNull()) {
-      return true;
-    }
-
-    std::string sort_column = query_runner_->SortColumn();
-    Schema schema = first.getSchema();
-
-    if (sort_column == "*" || sort_column.empty()) {
-      sort_column = schema.getFieldName(0);
-    }
-
-    if (schema.getFieldType(sort_column) == INT) {
-      int field_value_first = first.getField(sort_column).integer;
-      int field_value_second = second.getField(sort_column).integer;
-
-      return field_value_first < field_value_second;
-    } else if (schema.getFieldType(sort_column) == STR20) {
-      std::string field_value_first = *(first.getField(sort_column).str);
-      std::string field_value_second = *(second.getField(sort_column).str);
-
-      return field_value_first < field_value_second;
-    }
-
-    return true;
-  }
-} CompareTuples;
-
 QueryRunnerSort::QueryRunnerSort(QueryNode *query_node)
   : QueryRunner(query_node),
     block_size_(-1),
@@ -135,6 +91,7 @@ bool QueryRunnerSort::Run(QueryResultCallback callback,
   Tuple dummy_tuple = Tuple::getDummyTuple();
   dummy_tuple.null();
   Tuple minimum_tuple = dummy_tuple;
+  std::vector<Tuple> output_tuples;
   std::vector<int> block_tuple_indices(sublist_size_list_.size(), 0);
   while (true) {
     std::vector<Tuple> minimum_tuples(sublist_size_list_.size(), dummy_tuple);
@@ -173,12 +130,18 @@ bool QueryRunnerSort::Run(QueryResultCallback callback,
     block_tuple_indices[sort_indices[0]]++;
 
     if (minimum_tuple.isNull()) {
+      Callback()(this, output_tuples);
       break;
     }
 
-    std::vector<Tuple> output_tuples;
-    output_tuples.push_back(minimum_tuple);
-    Callback()(this, output_tuples);
+    if (output_tuples.size() < memory_constraint_ * tuples_per_block_) {
+      output_tuples.push_back(minimum_tuple);
+    }
+
+    if (output_tuples.size() == memory_constraint_ * tuples_per_block_) {
+      Callback()(this, output_tuples);
+      output_tuples.clear();
+    }
   }
 
   return true;
@@ -254,7 +217,7 @@ bool QueryRunnerSort::ResultCallback(QueryRunner *child,
   return true;
 }
 
-std::string QueryRunnerSort::SortColumn() const {
+std::string QueryRunnerSort::CompareColumn() const {
   return sort_column_;
 }
 

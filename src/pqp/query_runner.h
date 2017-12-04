@@ -37,6 +37,8 @@ class QueryRunner {
   virtual bool Initialize(SqlErrors::Type& error_code) = 0;
   virtual bool Run(QueryResultCallback callback,
       SqlErrors::Type& error_code) = 0;
+  virtual std::string CompareColumn() const { return std::string(); }
+
   virtual void PassScanParams(ScanParams params);
   virtual bool TableName(std::string& table_name);
   virtual bool TableSize(int& blocks, int& tuples);
