@@ -1,19 +1,35 @@
 #include "pqp/query_runner_sort.h"
 
 #include <algorithm>
+#include <numeric>
 #include <string>
 #include <vector>
 
 #include "base/debug.h"
+#include "pqp/tuple_helper.h"
 #include "storage/storage_manager_headers.h"
 
 typedef struct CompareTuples {
-  CompareTuples(const QueryRunnerSort *query_runner)
-      : query_runner_(query_runner) { }
+  CompareTuples(const QueryRunnerSort *query_runner, std::vector<Tuple> tuples)
+      : query_runner_(query_runner),
+        tuples_(tuples){ }
   const QueryRunnerSort *query_runner_;
+  const std::vector<Tuple> tuples_;
 
-  bool operator() (
-      const Tuple& first, const Tuple& second) const {
+  bool operator() (size_t first_index, size_t second_index) const {
+    if (first_index >= tuples_.size() || second_index >= tuples_.size()) {
+      DEBUG_MSG("");
+      return false;
+    }
+
+    Tuple first = tuples_[first_index];
+    Tuple second = tuples_[second_index];
+    if (first.isNull()) {
+      return false;
+    } else if (second.isNull()) {
+      return true;
+    }
+
     std::string sort_column = query_runner_->SortColumn();
     Schema schema = first.getSchema();
 
@@ -96,10 +112,10 @@ bool QueryRunnerSort::Run(QueryResultCallback callback,
     return true;
   }
 
-  std::vector<int> sublist_block_indices(sublist_size_list_.size(), 0);
   std::vector<Block *> blocks;
   int memory_index = scan_params_.start_index_;
   int relation_index = 0;
+  std::vector<int> sublist_block_indices(sublist_size_list_.size(), 0);
   for (auto index = 0; index < sublist_size_list_.size(); index++) {
     std::vector<Block *> sublist_blocks;
     if (!Storage()->ReadRelationBlocks(intermediate_relation_name_,
@@ -108,13 +124,20 @@ bool QueryRunnerSort::Run(QueryResultCallback callback,
       return false;
     }
 
+    sublist_block_indices[index] = relation_index;
     relation_index += sublist_size_list_[index];
+    if (index > 0) {
+      sublist_size_list_[index] += sublist_size_list_[index - 1];
+    }
     blocks.push_back(sublist_blocks[0]);
   }
 
+  Tuple dummy_tuple = Tuple::getDummyTuple();
+  dummy_tuple.null();
+  Tuple minimum_tuple = dummy_tuple;
   std::vector<int> block_tuple_indices(sublist_size_list_.size(), 0);
-  while (!sublistIterated(sublist_size_list_, sublist_block_indices)) {
-    std::vector<Tuple> minimum_tuples;
+  while (true) {
+    std::vector<Tuple> minimum_tuples(sublist_size_list_.size(), dummy_tuple);
     for (auto index = 0; index < sublist_block_indices.size(); index++) {
       if (block_tuple_indices[index] == blocks[index]->getNumTuples()) {
         if (sublist_block_indices[index] < sublist_size_list_[index] - 1) {
@@ -128,23 +151,34 @@ bool QueryRunnerSort::Run(QueryResultCallback callback,
 
           blocks[index] = sublist_blocks[0];
           block_tuple_indices[index] = 0;
+        } else {
+          block_tuple_indices[index] = -1;
         }
       }
 
       if (sublist_block_indices[index] < sublist_size_list_[index] &&
-          block_tuple_indices[index] < blocks[index]->getNumTuples()) {
-        minimum_tuples.push_back(
-            blocks[index]->getTuple(
-                block_tuple_indices[index]++));
+          block_tuple_indices[index] > -1) {
+        minimum_tuples[index] = blocks[index]->getTuple(
+            block_tuple_indices[index]);
+      } else {
+        minimum_tuples[index].null();
       }
     }
 
-    if (minimum_tuples.size()) {
-      std::sort(minimum_tuples.begin(),
-          minimum_tuples.end(), CompareTuples(this));
-      Tuple minimum_tuple = minimum_tuples[0];
+    std::vector<size_t> sort_indices(minimum_tuples.size());
+    std::iota(sort_indices.begin(), sort_indices.end(), 0);
+    std::sort(sort_indices.begin(),
+        sort_indices.end(), CompareTuples(this, minimum_tuples));
+    minimum_tuple = minimum_tuples[sort_indices[0]];
+    block_tuple_indices[sort_indices[0]]++;
+
+    if (minimum_tuple.isNull()) {
+      break;
     }
-    Callback()(this, minimum_tuples);
+
+    std::vector<Tuple> output_tuples;
+    output_tuples.push_back(minimum_tuple);
+    Callback()(this, output_tuples);
   }
 
   return true;
@@ -175,8 +209,16 @@ bool QueryRunnerSort::ResultCallback(QueryRunner *child,
 
   int tuple_size;
   if (TableSize(block_size_, tuple_size) && block_size_ <= memory_constraint_) {
-    std::sort(tuples.begin(), tuples.end(), CompareTuples(this));
-    return Callback()(this, tuples);
+    std::vector<size_t> sort_indices(tuples.size());
+    std::iota(sort_indices.begin(), sort_indices.end(), 0);
+    std::sort(sort_indices.begin(), sort_indices.end(),
+        CompareTuples(this, tuples));
+
+    std::vector<Tuple> sorted_tuples;
+    for (auto sort_index = 0; sort_index < sort_indices.size(); sort_index++) {
+      sorted_tuples.push_back(tuples[sort_indices[sort_index]]);
+    }
+    return Callback()(this, sorted_tuples);
   }
 
   if (intermediate_relation_name_.empty()) {
@@ -187,11 +229,14 @@ bool QueryRunnerSort::ResultCallback(QueryRunner *child,
     }
   }
 
-  std::sort(tuples.begin(), tuples.end(), CompareTuples(this));
+  std::vector<size_t> sort_indices(tuples.size());
+  std::iota(sort_indices.begin(), sort_indices.end(), 0);
+  std::sort(sort_indices.begin(), sort_indices.end(),
+      CompareTuples(this, tuples));
 
-  for (auto& tuple : tuples) {
-    Storage()->AppendTupleUsing(intermediate_relation_name_, tuple,
-        memory_constraint_);
+  for (auto sort_index = 0; sort_index < sort_indices.size(); sort_index++) {
+    Storage()->AppendTupleUsing(intermediate_relation_name_,
+        tuples[sort_indices[sort_index]], Storage()->MainMemorySize() - 1);
   }
 
   Storage()->PushLastBlock(intermediate_relation_name_, memory_constraint_);
