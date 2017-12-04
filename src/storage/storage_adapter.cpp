@@ -456,6 +456,28 @@ bool StorageAdapter::AppendTupleUsing(const std::string relation_name,
   return true;
 }
 
+bool StorageAdapter::PushLastBlock(const std::string relation_name,
+    const int index) const {
+  if (index >= MainMemorySize()) {
+    DEBUG_MSG("Overflow. Invalid memory block.");
+    return false;
+  }
+
+  Relation *relation = schema_manager_->getRelation(relation_name);
+  if (relation == nullptr) {
+    DEBUG_MSG("Invalid relation name: " << relation_name);
+    return false;
+  }
+
+  Block *block = main_memory_->getBlock(index);
+  if (!block->isEmpty()) {
+    relation->setBlock(relation->getNumOfBlocks(), index);
+    block->clear();
+  }
+
+  return true;
+}
+
 bool StorageAdapter::RelationFieldNames(std::string relation_name,
     std::vector<std::string>& field_names) {
   Relation *relation = schema_manager_->getRelation(relation_name);

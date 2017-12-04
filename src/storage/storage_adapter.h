@@ -60,6 +60,7 @@ class StorageAdapter {
   void ClearBlock(int index) const;
   bool AppendTupleUsing(const std::string relation_name, Tuple& tuple,
       const int index) const;
+  bool PushLastBlock(const std::string relation_name, const int index) const;
   bool RelationFieldNames(std::string relation_name,
       std::vector<std::string>& field_names);
 
