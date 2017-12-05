@@ -33,6 +33,10 @@ int main(int argc, char *argv[]) {
     }
 
     input_stream = &command_file;
+
+    if (argc == 3) {
+      query_manager->SetArgument(argv[2]);
+    }
   } else {
     input_stream = &std::cin;
   }

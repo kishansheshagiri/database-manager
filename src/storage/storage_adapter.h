@@ -14,6 +14,10 @@ class StorageAdapter {
   static StorageAdapter *Get();
 
   bool Initialize();
+
+  void ResetDiskStats();
+  void PrintDiskStats();
+
   bool CreateRelation(const std::string& name,
                       const std::vector<std::string>& fields,
                       const std::vector<enum FIELD_TYPE>& field_types) const;

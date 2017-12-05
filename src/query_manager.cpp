@@ -7,7 +7,7 @@
 
 QueryManager *QueryManager::manager_ = nullptr;
 
-QueryManager::QueryManager() {
+QueryManager::QueryManager() : print_stats_(false) {
   parser_ = std::make_unique<SqlParser>();
 }
 
@@ -42,6 +42,9 @@ void QueryManager::ExecuteQuery(SqlErrors::Type &error_code) {
 
   StatementFactory factory(statement_root);
   Statement *statement = factory.Create();
+  if (print_stats_) {
+    statement->PrintDiskStats();
+  }
 
   if (statement == nullptr) {
     DEBUG_MSG("");
@@ -51,4 +54,11 @@ void QueryManager::ExecuteQuery(SqlErrors::Type &error_code) {
 
   statement->Execute(error_code);
   delete sql_node;
+  delete statement;
+}
+
+void QueryManager::SetArgument(const char *argument) {
+  if (std::string(argument) == "--print-stats") {
+    print_stats_ = true;
+  }
 }

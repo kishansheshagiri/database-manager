@@ -15,10 +15,12 @@ class QueryManager {
   // Set SQL Query
   void SetQuery(std::string query, SqlErrors::Type &error_code);
   void ExecuteQuery(SqlErrors::Type &error_code);
+  void SetArgument(const char *argument);
 
  private:
   QueryManager();
 
+  bool print_stats_;
   std::unique_ptr<SqlParser> parser_;
   std::string sql_query_;
 

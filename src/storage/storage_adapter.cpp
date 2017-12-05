@@ -69,12 +69,21 @@ StorageAdapter::~StorageAdapter() {
 }
 
 bool StorageAdapter::Initialize() {
+  return true;
+}
+
+void StorageAdapter::ResetDiskStats() {
   disk_->resetDiskIOs();
   disk_->resetDiskTimer();
 
   disk_start_time_ = clock();
+}
 
-  return true;
+void StorageAdapter::PrintDiskStats() {
+  ERROR_MSG("Real elapse time = " << (
+      (double)(clock() - disk_start_time_) / CLOCKS_PER_SEC * 1000) << " ms");
+  ERROR_MSG("Calculated elapse time = " << disk_->getDiskTimer() << " ms");
+  ERROR_MSG("Calculated Disk I/Os = " << disk_->getDiskIOs());
 }
 
 bool StorageAdapter::CreateRelation(const std::string& name,

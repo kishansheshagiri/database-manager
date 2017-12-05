@@ -14,6 +14,7 @@ class Statement {
   virtual ~Statement();
 
   virtual void Execute(SqlErrors::Type& error_code) = 0;
+  virtual void PrintDiskStats();
 
  protected:
   const SqlNode *RootNode() const { return root_node_; }
@@ -26,6 +27,7 @@ class Statement {
   Statement() {}
 
   const SqlNode *root_node_;
+  bool print_stats_;
   StorageAdapter *storage_adapter_;
   std::vector<std::string> tables_;
 };
