@@ -331,7 +331,7 @@ bool StorageAdapter::ReadRelationBlocks(const std::string relation_name,
       adjusted_memory_num_blocks);
 
   if (adjusted_num_blocks < 1) {
-    LOG_MSG("");
+    DEBUG_MSG("");
     return false;
   }
 

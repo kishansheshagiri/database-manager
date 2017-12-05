@@ -42,16 +42,13 @@ bool QueryRunnerSort::Run(QueryResultCallback callback,
     SqlErrors::Type& error_code) {
   SetCallback(callback);
 
-  if (scan_params_passed_ && (scan_params_.num_blocks_ == 1 ||
-      scan_params_.num_blocks_ + scan_params_.start_index_ - 1 >
-          memory_constraint_)) {
-    scan_params_.num_blocks_ = memory_constraint_ - scan_params_.start_index_;
-    memory_constraint_ = scan_params_.num_blocks_;
-  }
-
-  if (!scan_params_passed_) {
+  if (scan_params_.num_blocks_ <= 0) {
     scan_params_.num_blocks_ = memory_constraint_;
   }
+
+  scan_params_.num_blocks_ = std::min(
+      memory_constraint_ - scan_params_.start_index_,
+      scan_params_.num_blocks_);
 
   ChildRunner()->PassScanParams(scan_params_);
 
@@ -69,7 +66,7 @@ bool QueryRunnerSort::Run(QueryResultCallback callback,
   }
 
   std::vector<Block *> blocks;
-  int memory_index = scan_params_.start_index_;
+  int memory_index = 0;
   int relation_index = 0;
   std::vector<int> sublist_block_indices(sublist_size_list_.size(), 0);
   for (auto index = 0; index < sublist_size_list_.size(); index++) {

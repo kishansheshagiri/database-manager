@@ -229,6 +229,7 @@ bool QueryPlanBuilder::createJoins(QueryNode *parent,
     }
 
     join_sort_node->SetSortColumn(join_attribute_name);
+    join_sort_node->SetSortForJoin(true);
     createPushCandidateNodes(push_candidates, join_sort_node, table,
         node_endings);
     if (node_endings.first != nullptr) {
@@ -293,17 +294,20 @@ void QueryPlanBuilder::createPushCandidateNodes(PushCandidates& push_candidates,
     if (sort_node->SortColumn(sort_column_name)) {
       Tokenizer::SplitIntoTwo(sort_column_name, '.',
           sort_table_name, sort_attribute_name);
-      if (sort_attribute_name.empty()) {
+      if (sort_attribute_name.empty() && !sort_node->SortForJoin()) {
         sort_attribute_name = sort_table_name;
         sort_table_name = table_list_[0];
       }
 
-      if (sort_table_name == table_name || sort_table_name == "*") {
+      if (sort_table_name == table_name || sort_table_name == "*" ||
+          sort_node->SortForJoin()) {
         if (sort_table_name == "*") {
           sort_node->SetSortColumn("*");
-        } else {
+        } else if (!sort_node->SortForJoin()) {
+          DEBUG_MSG("");
           sort_node->SetSortColumn(sort_attribute_name);
         }
+
         push_candidate_nodes.push_back(sort_node);
         sort_node = nullptr;
       }

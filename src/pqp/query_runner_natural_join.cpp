@@ -59,7 +59,6 @@ bool QueryRunnerNaturalJoin::Run(QueryResultCallback callback,
   ChildRunner()->PassScanParams(params);
 
   params.start_index_ = Storage()->MainMemorySize() / 2;
-  params.num_blocks_ = Storage()->MainMemorySize() / 2 - 1;
   right_child_->PassScanParams(params);
 
   if (!ChildRunner()->Run(
@@ -121,10 +120,39 @@ bool QueryRunnerNaturalJoin::Run(QueryResultCallback callback,
     }
 
     if (where_helper_->Evaluate(&merged_tuple, error_code)) {
-      std::vector<Tuple> output_tuples(1, merged_tuple);
+      int right_it = right_index;
+      std::vector<Tuple> output_tuples;
+      for (; left_index < left_tuples_.size(); left_index++) {
+        for (; right_it < right_tuples_.size(); right_it++) {
+          std::vector<Tuple> comparison_tuples = {
+              left_tuples_[left_index],
+              right_tuples_[right_it]
+          };
+
+          CompareTuples comparator(this, comparison_tuples);
+          if (!comparator.IsFieldEqual(0, 1)) {
+            break;
+          }
+
+          Tuple merged_output_tuple = Tuple::getDummyTuple();
+          if (!mergeTuples(left_tuples_[left_index], right_tuples_[right_it],
+              merged_output_tuple)) {
+            DEBUG_MSG("");
+            error_code_ = SqlErrors::ERROR_NATURAL_JOIN;
+            return false;
+          }
+
+          if (!merged_output_tuple.isNull()) {
+            output_tuples.push_back(merged_output_tuple);
+          }
+        }
+      }
+
+      if (right_it > right_index) {
+        right_index = right_it;
+      }
+
       Callback()(this, output_tuples);
-      left_index++;
-      right_index++;
       continue;
     }
 

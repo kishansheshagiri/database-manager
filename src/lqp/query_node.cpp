@@ -106,6 +106,15 @@ void QueryNode::SetWhereHelper(
   where_helper_ = where_helper;
 }
 
+void QueryNode::SetSortForJoin(bool sort_for_join) {
+  if (type_ != QueryNode::QUERY_NODE_TYPE_SORT) {
+    DEBUG_MSG("");
+    return;
+  }
+
+  sort_for_join_ = sort_for_join;
+}
+
 bool QueryNode::TableName(std::string& table_name) {
   if (type_ != QueryNode::QUERY_NODE_TYPE_TABLE_SCAN) {
     DEBUG_MSG("");
@@ -146,4 +155,12 @@ bool QueryNode::WhereHelper(WhereClauseHelperSelect *&helper) {
 
   helper = where_helper_;
   return true;
+}
+
+bool QueryNode::SortForJoin() {
+  if (type_ != QueryNode::QUERY_NODE_TYPE_SORT) {
+    return false;
+  }
+
+  return sort_for_join_;
 }

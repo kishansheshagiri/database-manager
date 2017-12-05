@@ -7,7 +7,7 @@ CompareTuples::CompareTuples(const QueryRunner *query_runner,
     : query_runner_(query_runner),
       tuples_(tuples){ }
 
-bool CompareTuples::operator() (size_t first_index, size_t second_index) const {
+bool CompareTuples::operator()(size_t first_index, size_t second_index) const {
   if (first_index >= tuples_.size() || second_index >= tuples_.size()) {
     DEBUG_MSG("");
     return false;
@@ -22,18 +22,31 @@ bool CompareTuples::operator() (size_t first_index, size_t second_index) const {
   }
 
   std::string sort_column = query_runner_->CompareColumn();
-  Schema schema = first.getSchema();
+  Schema schema_first = first.getSchema();
+  Schema schema_second = second.getSchema();
 
   if (sort_column == "*" || sort_column.empty()) {
-    sort_column = schema.getFieldName(0);
+    int index = 0;
+    while (index < schema_first.getNumOfFields() &&
+        index < schema_second.getNumOfFields()) {
+      if (schema_first.getFieldType(index) == schema_second.getFieldType(
+          index)) {
+        sort_column = schema_first.getFieldName(index);
+        break;
+      }
+    }
   }
 
-  if (schema.getFieldType(sort_column) == INT) {
+  if (sort_column.empty()) {
+    return false;
+  }
+
+  if (schema_first.getFieldType(sort_column) == INT) {
     int field_value_first = first.getField(sort_column).integer;
     int field_value_second = second.getField(sort_column).integer;
 
     return field_value_first < field_value_second;
-  } else if (schema.getFieldType(sort_column) == STR20) {
+  } else if (schema_first.getFieldType(sort_column) == STR20) {
     std::string field_value_first = *(first.getField(sort_column).str);
     std::string field_value_second = *(second.getField(sort_column).str);
 
@@ -41,6 +54,49 @@ bool CompareTuples::operator() (size_t first_index, size_t second_index) const {
   }
 
   return true;
+}
+
+bool CompareTuples::IsFieldEqual(size_t first_index, size_t second_index) const {
+  Tuple first = tuples_[first_index];
+  Tuple second = tuples_[second_index];
+
+  if (first.isNull() || second.isNull()) {
+    return false;
+  }
+
+  std::string sort_column = query_runner_->CompareColumn();
+  Schema schema_first = first.getSchema();
+  Schema schema_second = second.getSchema();
+
+  if (sort_column == "*" || sort_column.empty()) {
+    int index = 0;
+    while (index < schema_first.getNumOfFields() &&
+        index < schema_second.getNumOfFields()) {
+      if (schema_first.getFieldType(index) == schema_second.getFieldType(
+          index)) {
+        sort_column = schema_first.getFieldName(index);
+        break;
+      }
+    }
+  }
+
+  if (sort_column.empty()) {
+    return false;
+  }
+
+  if (schema_first.getFieldType(sort_column) == INT) {
+    int field_value_first = first.getField(sort_column).integer;
+    int field_value_second = second.getField(sort_column).integer;
+
+    return field_value_first == field_value_second;
+  } else if (schema_first.getFieldType(sort_column) == STR20) {
+    std::string field_value_first = *(first.getField(sort_column).str);
+    std::string field_value_second = *(second.getField(sort_column).str);
+
+    return field_value_first == field_value_second;
+  }
+
+  return false;
 }
 
 bool operator ==(const Tuple &first, const Tuple &second) {
