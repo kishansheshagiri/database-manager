@@ -56,7 +56,11 @@ bool QueryRunnerDuplicateElimination::ResultCallback(QueryRunner *child,
 
   std::vector<Tuple> output_tuples;
   for (auto tuple : tuples) {
-    if (!previous_tuple_.isNull() && !(tuple == previous_tuple_)) {
+    if (!previous_tuple_.isNull()) {
+      if (!(tuple == previous_tuple_)) {
+        output_tuples.push_back(tuple);
+      }
+    } else {
       output_tuples.push_back(tuple);
     }
 

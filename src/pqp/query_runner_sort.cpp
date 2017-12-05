@@ -13,7 +13,7 @@ QueryRunnerSort::QueryRunnerSort(QueryNode *query_node)
   : QueryRunner(query_node),
     block_size_(-1),
     tuples_per_block_(-1),
-    memory_constraint_(Storage()->MainMemorySize() - 1),
+    memory_constraint_(Storage()->MainMemorySize()),
     scan_params_passed_(false),
     error_code_(SqlErrors::NO_ERROR) {
 }
@@ -41,14 +41,6 @@ bool QueryRunnerSort::Initialize(SqlErrors::Type& error_code) {
 bool QueryRunnerSort::Run(QueryResultCallback callback,
     SqlErrors::Type& error_code) {
   SetCallback(callback);
-
-  if (scan_params_.num_blocks_ <= 0) {
-    scan_params_.num_blocks_ = memory_constraint_;
-  }
-
-  scan_params_.num_blocks_ = std::min(
-      memory_constraint_ - scan_params_.start_index_,
-      scan_params_.num_blocks_);
 
   ChildRunner()->PassScanParams(scan_params_);
 
@@ -111,7 +103,8 @@ bool QueryRunnerSort::Run(QueryResultCallback callback,
       }
 
       if (sublist_block_indices[index] < sublist_size_list_[index] &&
-          block_tuple_indices[index] > -1) {
+          block_tuple_indices[index] != -1 &&
+          block_tuple_indices[index] < blocks[index]->getNumTuples()) {
         minimum_tuples[index] = blocks[index]->getTuple(
             block_tuple_indices[index]);
       } else {
@@ -145,6 +138,11 @@ bool QueryRunnerSort::Run(QueryResultCallback callback,
 }
 
 void QueryRunnerSort::PassScanParams(ScanParams params) {
+  params.start_index_ = 0;
+  if (params.num_blocks_ != 1) {
+    params.num_blocks_ = Storage()->MainMemorySize();
+  }
+
   scan_params_ = params;
   if (ChildRunner()) {
     ChildRunner()->PassScanParams(params);
@@ -199,7 +197,8 @@ bool QueryRunnerSort::ResultCallback(QueryRunner *child,
         tuples[sort_indices[sort_index]], Storage()->MainMemorySize() - 1);
   }
 
-  Storage()->PushLastBlock(intermediate_relation_name_, memory_constraint_);
+  Storage()->PushLastBlock(intermediate_relation_name_, std::min(
+      memory_constraint_, Storage()->MainMemorySize() - 1));
   int block_count = tuples.size() / tuples_per_block_;
   int adjusted_block_count = tuples.size() % tuples_per_block_ ?
       block_count + 1 : block_count;
