@@ -1,5 +1,6 @@
 #include "pqp/query_runner_factory.h"
 
+#include "pqp/query_runner_duplicate_elimination.h"
 #include "pqp/query_runner_natural_join.h"
 #include "pqp/query_runner_product.h"
 #include "pqp/query_runner_projection.h"
@@ -22,6 +23,8 @@ QueryRunner *QueryRunnerFactory::Create() const {
       return new QueryRunnerScan(query_node_);
     case QueryNode::QUERY_NODE_TYPE_SORT:
       return new QueryRunnerSort(query_node_);
+    case QueryNode::QUERY_NODE_TYPE_DUPLICATE_ELIMINATION:
+      return new QueryRunnerDuplicateElimination(query_node_);
     case QueryNode::QUERY_NODE_TYPE_PROJECTION:
       return new QueryRunnerProjection(query_node_);
     case QueryNode::QUERY_NODE_TYPE_SELECTION:

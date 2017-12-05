@@ -22,6 +22,7 @@ SOURCES = StorageManager.cpp \
 					query_node.cpp \
 					query_plan_builder.cpp \
 					query_runner.cpp \
+					query_runner_duplicate_elimination.cpp \
 					query_runner_factory.cpp \
 					query_runner_natural_join.cpp \
 					query_runner_product.cpp \
