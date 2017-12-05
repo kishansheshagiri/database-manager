@@ -8,6 +8,7 @@
 
 StatementSelect::StatementSelect(const SqlNode *root_node)
   : Statement(root_node),
+    distinct_(false),
     where_node_(nullptr) {
 }
 
