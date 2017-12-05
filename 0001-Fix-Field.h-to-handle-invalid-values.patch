@@ -1,0 +1,25 @@
+From 8076690eba71e869770d15b8f816f0ec5cf79fb6 Mon Sep 17 00:00:00 2001
+From: Kishan Hulkodu Sheshagiri <kishan.sheshagiri@tamu.edu>
+Date: Wed, 15 Nov 2017 19:38:38 -0600
+Subject: [PATCH] Fix Field.h to handle invalid values
+
+---
+ storage_manager/Field.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/storage_manager/Field.h b/storage_manager/Field.h
+index 369d93a..3877724 100644
+--- a/storage_manager/Field.h
++++ b/storage_manager/Field.h
+@@ -9,7 +9,7 @@ using namespace std;
+  *        and determine whether to access variable "str" or "integer" from the "union"
+  */
+ 
+-enum FIELD_TYPE { INT, STR20 };
++enum FIELD_TYPE { INT = 1, STR20 };
+ 
+ union Field {
+ public:
+-- 
+2.14.1
+
