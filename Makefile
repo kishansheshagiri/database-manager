@@ -9,8 +9,7 @@ VPATH = src \
 INCLUDEDIR = src
 CFLAGS += -std=c++14 \
 					-I. -I$(INCLUDEDIR) \
-					-fpermissive -Wno-static-float-init \
-					-DDEBUG
+					-fpermissive -Wno-static-float-init
 CC = g++
 TARGET = database-manager
 OBJDIR = obj
