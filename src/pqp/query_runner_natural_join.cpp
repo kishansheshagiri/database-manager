@@ -95,11 +95,6 @@ bool QueryRunnerNaturalJoin::Run(QueryResultCallback callback,
     return Callback()(this, right_tuples_);
   }
 
-  std::sort(left_tuples_.begin(), left_tuples_.end(), CompareTuples(this,
-        left_tuples_));
-  std::sort(right_tuples_.begin(), right_tuples_.end(), CompareTuples(this,
-        right_tuples_));
-
   if (intermediate_relation_name_.empty()) {
     std::string table_name_first, table_name_second;
     ChildRunner()->TableName(table_name_first);
