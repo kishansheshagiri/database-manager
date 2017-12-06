@@ -92,8 +92,13 @@ bool QueryRunnerNaturalJoin::Run(QueryResultCallback callback,
   }
 
   if (right_tuples_.empty()) {
-    return Callback()(this, left_tuples_);
+    return Callback()(this, right_tuples_);
   }
+
+  std::sort(left_tuples_.begin(), left_tuples_.end(), CompareTuples(this,
+        left_tuples_));
+  std::sort(right_tuples_.begin(), right_tuples_.end(), CompareTuples(this,
+        right_tuples_));
 
   if (intermediate_relation_name_.empty()) {
     std::string table_name_first, table_name_second;
@@ -121,9 +126,12 @@ bool QueryRunnerNaturalJoin::Run(QueryResultCallback callback,
 
     if (where_helper_->Evaluate(&merged_tuple, error_code)) {
       int right_it = right_index;
+      int next_right_it = 0;
+      int mismatch_count = 0;
       std::vector<Tuple> output_tuples;
       for (; left_index < left_tuples_.size(); left_index++) {
-        for (; right_it < right_tuples_.size(); right_it++) {
+        for (right_it = right_index; right_it < right_tuples_.size();
+            right_it++) {
           std::vector<Tuple> comparison_tuples = {
               left_tuples_[left_index],
               right_tuples_[right_it]
@@ -131,6 +139,7 @@ bool QueryRunnerNaturalJoin::Run(QueryResultCallback callback,
 
           CompareTuples comparator(this, comparison_tuples);
           if (!comparator.IsFieldEqual(0, 1)) {
+            mismatch_count++;
             break;
           }
 
@@ -146,26 +155,28 @@ bool QueryRunnerNaturalJoin::Run(QueryResultCallback callback,
             output_tuples.push_back(merged_output_tuple);
           }
         }
+        next_right_it = right_it;
+
+        if (mismatch_count > 1) {
+          break;
+        }
       }
 
-      if (right_it > right_index) {
-        right_index = right_it;
-      }
+      right_index = next_right_it + 1;
 
       Callback()(this, output_tuples);
-      continue;
-    }
-
-    std::vector<Tuple> comparison_tuples = {
-        left_tuples_[left_index],
-        right_tuples_[right_index]
-    };
-
-    CompareTuples comparator(this, comparison_tuples);
-    if (comparator(0, 1)) {
-      left_index++;
     } else {
-      right_index++;
+      std::vector<Tuple> comparison_tuples = {
+          left_tuples_[left_index],
+          right_tuples_[right_index]
+      };
+
+      CompareTuples comparator(this, comparison_tuples);
+      if (comparator(0, 1)) {
+        left_index++;
+      } else {
+        right_index++;
+      }
     }
   }
 

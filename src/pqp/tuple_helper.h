@@ -10,6 +10,7 @@
 typedef struct CompareTuples {
   CompareTuples(const QueryRunner *query_runner, std::vector<Tuple> tuples);
   bool operator()(size_t first_index, size_t second_index) const;
+  bool operator()(Tuple first, Tuple second) const;
   bool IsFieldEqual(size_t first_index, size_t second_index) const;
 
  private:

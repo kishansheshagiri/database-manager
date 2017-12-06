@@ -100,7 +100,7 @@ bool QueryPlanBuilder::Build(SqlErrors::Type& error_code) {
     }
   }
 
-  if (sort_node != nullptr) {
+  if (sort_node != nullptr && duplication_elimination_node == nullptr) {
     QueryNode *next_child = next_node->Child(0);
     next_node->RemoveChild(next_child);
     next_node->AppendChild(sort_node);
@@ -109,7 +109,8 @@ bool QueryPlanBuilder::Build(SqlErrors::Type& error_code) {
     sort_node = nullptr;
   }
 
-  if (push_candidates.size() != 0 || sort_node != nullptr) {
+  if (push_candidates.size() != 0 || (sort_node != nullptr &&
+        duplication_elimination_node == nullptr)) {
     DEBUG_MSG("Push candidates(" << push_candidates.size() <<
         ")/sort node(" << (sort_node != nullptr) << ") not empty");
     error_code = SqlErrors::WHERE_CLAUSE_ERROR;
