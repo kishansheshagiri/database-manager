@@ -50,6 +50,14 @@ bool CompareTuples::operator()(size_t first_index, size_t second_index) const {
     std::string field_value_first = *(first.getField(sort_column).str);
     std::string field_value_second = *(second.getField(sort_column).str);
 
+    if (field_value_first == "NULL") {
+      field_value_first.clear();
+    }
+
+    if (field_value_second == "NULL") {
+      field_value_second.clear();
+    }
+
     return field_value_first < field_value_second;
   }
 
@@ -91,6 +99,14 @@ bool CompareTuples::operator()(Tuple first, Tuple second) const {
   } else if (schema_first.getFieldType(sort_column) == STR20) {
     std::string field_value_first = *(first.getField(sort_column).str);
     std::string field_value_second = *(second.getField(sort_column).str);
+
+    if (field_value_first == "NULL") {
+      field_value_first.clear();
+    }
+
+    if (field_value_second == "NULL") {
+      field_value_second.clear();
+    }
 
     return field_value_first < field_value_second;
   }

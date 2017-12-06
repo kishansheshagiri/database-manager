@@ -2,7 +2,6 @@
 
 ### Steps to run ###
 ```sh
-$ cd database-manager
 $ make
 $ ./database-manager
 ```
